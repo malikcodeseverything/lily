@@ -1,3 +1,8 @@
+// Self-hosted fonts: no third-party requests, and layout never waits on them.
+import '@fontsource-variable/geist/wght.css';
+import '@fontsource-variable/geist-mono/wght.css';
+import '@fontsource/instrument-serif/400.css';
+import '@fontsource/instrument-serif/400-italic.css';
 import './ui/styles.css';
 import * as THREE from 'three';
 import { App } from './app';

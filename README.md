@@ -1,10 +1,16 @@
 # lily.
 
+[![CI](https://github.com/malikcodeseverything/lily/actions/workflows/ci.yml/badge.svg)](https://github.com/malikcodeseverything/lily/actions/workflows/ci.yml)
+
+**[Live demo](#deploying)** · TypeScript · Three.js · WebGL (GLSL) · MediaPipe
+
+![lily: a stargazer lily made of glowing particles inside a wireframe gizmo, with the hand-tracking HUD](docs/hero.jpg)
+
 **Sculpt glowing 3D point clouds in mid-air with your hands.** Real-time hand tracking in the browser drives a GPU particle system: pinch to turn an object, pull it bigger with two hands, crush it into a ball of light with your fist, and open your hand to let it bloom into the next one.
 
 No install, no server. Everything (camera, hand tracking, rendering) runs locally in the browser.
 
-<!-- Add a screen recording here: press R in the app to record one. -->
+<!-- Demo clip: record one in the app with R (clean mode), then drag the file into this README on GitHub. -->
 
 ## Features
 

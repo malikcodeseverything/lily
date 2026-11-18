@@ -154,7 +154,7 @@ export class Hud {
       <div class="inner">
         <div class="eyebrow mono">Real-time hand tracking · runs in your browser</div>
         <h1>Hold a <em>lily</em><br/>in mid-air.</h1>
-        <p>Pinch the air to turn it. Close your fist to crush it into light, then open your hand and it blooms into something new. Five sculptures made of glowing particles, running entirely in your browser.</p>
+        <p>Pinch the air to turn it. Close your fist to crush it into light, then open your hand and it blooms into something new. Seven sculptures made of glowing particles, running entirely in your browser.</p>
         <div class="actions">
           <button class="btn primary" data-act="start-camera">${ICONS.hand}<span>Enable camera</span></button>
           <button class="btn ghost" data-act="start-mouse">Explore with mouse</button>

@@ -145,7 +145,7 @@ export class Overlay {
 
   private tag(text: string, x: number, y: number, opacity: number, align: CanvasTextAlign = 'center'): void {
     const { ctx } = this;
-    ctx.font = '500 10.5px ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace';
+    ctx.font = '500 10.5px "Geist Mono Variable", ui-monospace, "SF Mono", Menlo, monospace';
     ctx.textAlign = align;
     ctx.textBaseline = 'middle';
     const m = ctx.measureText(text);
