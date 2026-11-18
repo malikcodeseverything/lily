@@ -4,7 +4,6 @@ import { buildGalaxy } from './galaxy';
 import { buildJellyfish } from './jellyfish';
 import { buildKoi } from './koi';
 import { buildLily } from './lily';
-import { buildSaturn } from './saturn';
 import { buildTree } from './tree';
 import type { ShapeDefinition } from './types';
 
@@ -15,7 +14,6 @@ export const BUILTIN_SHAPES: ShapeDefinition[] = [
   { id: 'butterfly', name: 'Butterfly', build: buildButterfly },
   { id: 'tree', name: 'Tree', build: buildTree },
   { id: 'jellyfish', name: 'Jellyfish', build: buildJellyfish },
-  { id: 'saturn', name: 'Saturn', build: buildSaturn },
   { id: 'koi', name: 'Koi', build: buildKoi },
   { id: 'galaxy', name: 'Galaxy', build: buildGalaxy },
 ];

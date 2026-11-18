@@ -45,7 +45,7 @@ describe('built-in shapes', () => {
       expect(c.positions.every(Number.isFinite)).toBe(true);
       expect(c.colors.every((v) => v >= 0 && v <= 1.5)).toBe(true);
       const extent = Math.max(c.bounds[3] - c.bounds[0], c.bounds[4] - c.bounds[1], c.bounds[5] - c.bounds[2]);
-      // Normalized to fit the view; wide objects like Saturn get a little more room.
+      // Normalized to fit the view; some objects get a little more room.
       expect(extent).toBeGreaterThan(2.0);
       expect(extent).toBeLessThan(2.45);
     });
