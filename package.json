@@ -1,8 +1,8 @@
 {
-  "name": "handform",
+  "name": "lily",
   "private": true,
   "version": "0.1.0",
-  "description": "Shape 3D point-cloud sculptures in mid-air with your hands. Real-time hand tracking in the browser.",
+  "description": "Sculpt glowing 3D point-cloud objects in mid-air with your hands. Real-time hand tracking in the browser.",
   "type": "module",
   "scripts": {
     "dev": "vite",
