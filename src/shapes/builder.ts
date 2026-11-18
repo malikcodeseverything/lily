@@ -70,6 +70,7 @@ export class CloudBuilder {
     animType: AnimType;
     pose?: [number, number, number];
     glow?: number;
+    halo?: number;
     /** Largest extent after normalization. */
     extent?: number;
     seed?: number;
@@ -102,6 +103,7 @@ export class CloudBuilder {
       animType: opts.animType,
       pose: opts.pose ?? [0, 0, 0],
       glow: opts.glow ?? 0,
+      halo: opts.halo ?? 1,
       bounds: [
         (minX - cx) * scale, (minY - cy) * scale, (minZ - cz) * scale,
         (maxX - cx) * scale, (maxY - cy) * scale, (maxZ - cz) * scale,

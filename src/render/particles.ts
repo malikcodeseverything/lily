@@ -71,6 +71,8 @@ export class ParticleCloud {
       uPoseB: { value: new THREE.Matrix3() },
       uGlowA: { value: 0 },
       uGlowB: { value: 0 },
+      uHaloA: { value: 1 },
+      uHaloB: { value: 1 },
       uPointSize: { value: 0.016 },
       uObjectScale: { value: 1 },
       uViewportHeight: { value: 800 },
@@ -143,6 +145,7 @@ export class ParticleCloud {
     this.uniforms[`uPose${slot}`].value = pose;
     this.uniforms[`uAnim${slot}`].value = cloud.animType;
     this.uniforms[`uGlow${slot}`].value = cloud.glow;
+    this.uniforms[`uHalo${slot}`].value = cloud.halo ?? 1;
     this.slots[slot] = { cloud, bounds: posedBounds(cloud, pose) };
   }
 

@@ -41,6 +41,8 @@ export interface PointCloud {
   pose: [number, number, number];
   /** Extra emissive strength, 0 = none. */
   glow: number;
+  /** How much of the soft additive halo to draw (1 = default). Smooth, large surfaces look better with less. */
+  halo?: number;
   /** Axis-aligned bounds in local (pre-pose) space: [minX,minY,minZ,maxX,maxY,maxZ]. */
   bounds: [number, number, number, number, number, number];
 }

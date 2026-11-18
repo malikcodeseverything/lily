@@ -19,6 +19,8 @@ uniform mat3 uPoseA;
 uniform mat3 uPoseB;
 uniform float uGlowA;
 uniform float uGlowB;
+uniform float uHaloA;
+uniform float uHaloB;
 uniform float uPointSize;
 uniform float uObjectScale;
 uniform float uViewportHeight;
@@ -134,7 +136,8 @@ void animatePoint(inout vec3 p, inout vec3 n, float a, float type, float r) {
     n.yz = mat2(c, s, -s, c) * n.yz;
     p.y += 0.025 * sin(uTime * 1.1);
   } else if (type < 6.5) {
-    // Orbit: Keplerian-ish angular speed, slower farther out.
+    // Orbit: Keplerian-ish angular speed, slower farther out. Negative = fixed.
+    if (a < 0.0) return;
     float speed = a > 0.0 ? 0.55 / pow(max(a, 0.15), 1.5) : 0.25;
     float ang = uTime * min(speed, 2.2) * 0.35;
     p = rotY(p, ang);
@@ -258,7 +261,8 @@ void main() {
   s *= 1.0 - 0.35 * mid * uScatter;
   s *= 1.0 - 0.4 * c;
   if (uHalo > 0.5) {
-    float keep = step(rnd.w, uHaloFraction * (1.0 + glow) + mid * uScatter * 0.12);
+    float haloAmt = mix(uHaloA, uHaloB, e);
+    float keep = step(rnd.w, uHaloFraction * (1.0 + glow) * haloAmt + mid * uScatter * 0.12);
     s *= 1.0 - 0.5 * c;
     s *= uHaloSize * keep;
   }
