@@ -13,6 +13,12 @@ export const AnimType = {
   Dragon: 3,
   /** Jellyfish. 0..1 bell rim weight, 1..2 tentacle parameter. */
   Pulse: 4,
+  /** Aircraft. Gentle roll and bob; anim >= 1 is afterburner (1 + distance along the plume). */
+  Jet: 5,
+  /** Planets, rings, galaxies. anim = orbital radius (0 = solid-body spin). */
+  Orbit: 6,
+  /** Fish. anim = 0..1 from head to tail; 2..3 = fin flutter. */
+  Swim: 7,
 } as const;
 export type AnimType = (typeof AnimType)[keyof typeof AnimType];
 

@@ -144,3 +144,42 @@ export function triangle(
 export function triArea(a: V3, b: V3, c: V3): number {
   return len(cross(sub(b, a), sub(c, a))) / 2;
 }
+
+/**
+ * Scatter points inside a straight-edged 2D polygon and map each sample to
+ * 3D with a callback. Used for flat panels such as wings and fins.
+ */
+export function panel(
+  b: CloudBuilder,
+  rng: Rng,
+  poly: [number, number][],
+  count: number,
+  map: (u: number, v: number) => { p: V3; n: V3; c: V3; size?: number; anim?: number } | null,
+): void {
+  let minU = Infinity, maxU = -Infinity, minV = Infinity, maxV = -Infinity;
+  for (const [u, v] of poly) {
+    minU = Math.min(minU, u); maxU = Math.max(maxU, u);
+    minV = Math.min(minV, v); maxV = Math.max(maxV, v);
+  }
+  let placed = 0;
+  let guard = 0;
+  while (placed < count && guard++ < count * 30) {
+    const u = rng.range(minU, maxU);
+    const v = rng.range(minV, maxV);
+    if (!inPoly(u, v, poly)) continue;
+    const s = map(u, v);
+    if (!s) continue;
+    b.push(s.p[0], s.p[1], s.p[2], s.c[0], s.c[1], s.c[2], s.n[0], s.n[1], s.n[2], s.size ?? 1, s.anim ?? 0);
+    placed++;
+  }
+}
+
+function inPoly(x: number, y: number, poly: [number, number][]): boolean {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, yi] = poly[i];
+    const [xj, yj] = poly[j];
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
