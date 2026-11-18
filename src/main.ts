@@ -9,6 +9,7 @@ import { Recorder } from './recording/recorder';
 import { Overlay } from './render/overlay';
 import { videoToViewport } from './tracking/coords';
 import { HandSlots, type TrackedHand } from './tracking/handSlots';
+import { describeCameraError } from './tracking/cameraErrors';
 import { HandTracker } from './tracking/handTracker';
 import { Hud, type HudSettings } from './ui/hud';
 
@@ -71,6 +72,7 @@ function apply<K extends keyof HudSettings>(key: K, value: HudSettings[K]): void
 // ---- Camera session -------------------------------------------------------
 async function startCamera(): Promise<void> {
   hud.setStartBusy(true, 'Starting camera…');
+  hud.showProblem(null);
   hud.setStatus('loading', 'Camera');
   let phase = 'camera' as 'camera' | 'model';
   try {
@@ -88,15 +90,13 @@ async function startCamera(): Promise<void> {
     leaveIntro();
     hud.toast('Show your hands to the camera');
   } catch (err) {
-    console.error(err);
-    hud.setStartBusy(false);
+    console.error('[camera]', err);
+    hud.setStartBusy(false, 'Try again');
     hud.setStatus('mouse', 'Mouse');
     hud.setCameraOn(false);
-    const denied = err instanceof Error && err.name === 'NotAllowedError';
-    const msg = phase === 'model' ? 'Could not load the hand model (check your connection)' : denied ? 'Camera permission was blocked' : 'Could not start the camera';
-    hud.toast(`${msg}. Using mouse controls.`, 4000);
-    hud.hideStart();
-    leaveIntro();
+    // Keep the welcome screen up with the exact reason and how to fix it.
+    hud.showProblem(describeCameraError(err, phase));
+    if (intro()) app.transform.targetPosition.x = 1.15;
   }
 }
 

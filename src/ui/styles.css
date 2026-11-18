@@ -167,6 +167,14 @@ input[type='range'] { accent-color: var(--accent); width: 110px; }
 .hud.intro .guide, .hud.intro .carousel, .hud.intro .debug { opacity: 0; pointer-events: none; }
 .guide, .carousel { transition: opacity 400ms var(--ease); }
 
+.start .problem {
+  margin-top: var(--s5); max-width: 560px; padding: var(--s4) var(--s5); border-radius: var(--r-card);
+  background: rgba(255, 59, 59, 0.1); border: 1px solid rgba(255, 79, 123, 0.45);
+}
+.start .problem strong { display: block; font-size: 15px; font-weight: 500; margin-bottom: var(--s2); }
+.start .problem ol { margin: 0; padding-left: 18px; color: var(--n-6); line-height: 1.55; display: grid; gap: 4px; }
+.start .problem code { display: block; margin-top: var(--s3); color: var(--n-5); font-size: 10.5px; text-transform: none; letter-spacing: 0; word-break: break-word; }
+
 /* ---------- Toast + drop ---------- */
 .toast {
   position: absolute; top: 76px; left: 50%; transform: translate(-50%, -8px); opacity: 0;

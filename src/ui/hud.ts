@@ -130,6 +130,7 @@ export class Hud {
           <button class="btn primary" data-act="start-camera">${ICONS.hand}<span>Enable camera</span></button>
           <button class="btn ghost" data-act="start-mouse">Explore with mouse</button>
         </div>
+        <div class="problem" role="alert" hidden></div>
         <div class="fine mono">Video is processed on this device and never uploaded.</div>
       </div>
     </section>`);
@@ -236,6 +237,32 @@ export class Hud {
     const b = this.start.querySelector<HTMLButtonElement>('[data-act="start-camera"]')!;
     b.disabled = busy;
     b.querySelector('span')!.textContent = text;
+  }
+
+  /** Show (or clear) a camera problem on the welcome screen. */
+  showProblem(problem: { title: string; steps: string[]; code: string } | null): void {
+    const el = this.start.querySelector<HTMLElement>('.problem')!;
+    if (!problem) {
+      el.hidden = true;
+      el.innerHTML = '';
+      return;
+    }
+    el.innerHTML = '';
+    const title = document.createElement('strong');
+    title.textContent = problem.title;
+    const list = document.createElement('ol');
+    for (const step of problem.steps) {
+      const li = document.createElement('li');
+      li.textContent = step;
+      list.appendChild(li);
+    }
+    const code = document.createElement('code');
+    code.className = 'mono';
+    code.textContent = problem.code;
+    el.append(title, list, code);
+    el.hidden = false;
+    this.start.hidden = false;
+    this.root.classList.add('intro');
   }
 
   hideStart(): void {

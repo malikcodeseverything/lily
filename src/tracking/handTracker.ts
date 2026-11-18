@@ -40,11 +40,12 @@ export class HandTracker {
     };
     try {
       set('camera');
-      if (!navigator.mediaDevices?.getUserMedia) throw new Error('This browser does not expose a camera API (needs HTTPS or localhost).');
-      this.stream = await navigator.mediaDevices.getUserMedia({
-        audio: false,
-        video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 60 } },
-      });
+      if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+        const e = new Error('Camera APIs are only available on localhost or HTTPS.');
+        e.name = 'InsecureContext';
+        throw e;
+      }
+      this.stream = await openCamera();
       this.video.srcObject = this.stream;
       await this.video.play();
       set('model');
@@ -113,6 +114,24 @@ export class HandTracker {
 
   get running(): boolean {
     return this.status === 'ready';
+  }
+}
+
+/**
+ * Ask for a 720p selfie stream; if the device rejects those constraints or
+ * a driver hiccups, retry once with the plainest possible request.
+ */
+async function openCamera(): Promise<MediaStream> {
+  try {
+    return await navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 60 } },
+    });
+  } catch (err) {
+    const name = err instanceof Error ? err.name : '';
+    if (name === 'NotAllowedError' || name === 'SecurityError') throw err;
+    console.warn('Preferred camera settings failed, retrying with defaults', err);
+    return navigator.mediaDevices.getUserMedia({ audio: false, video: true });
   }
 }
 
