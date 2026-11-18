@@ -11,7 +11,7 @@ void main() {
   if (d > 1.0) discard;
   if (uHalo > 0.5) {
     // Additive soft glow sprite.
-    float a = exp(-d * d * 4.5) * uHaloStrength * (0.55 + vEnergy) * uOpacity;
+    float a = exp(-d * d * 4.5) * uHaloStrength * (0.6 + 0.6 * vEnergy) * uOpacity;
     gl_FragColor = vec4(vColor, a);
   } else {
     // Opaque round point with a hint of spherical shading.

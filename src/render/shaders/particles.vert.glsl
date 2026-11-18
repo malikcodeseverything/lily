@@ -138,7 +138,8 @@ void main() {
   float c = uCollapse;
   if (c > 1e-4) {
     vec3 dir = normalize(rnd.yzw - 0.5 + 1e-4);
-    vec3 core = dir * pow(rnd.x, 0.4) * 0.26;
+    // A swirling ball of light that keeps each particle's own color.
+    vec3 core = dir * (0.12 + 0.2 * pow(rnd.x, 0.3));
     core = rotY(core, uTime * (1.5 + rnd.z * 3.5));
     core += 0.03 * vec3(snoise(core * 6.0 + uTime), snoise(core * 6.0 + 9.0 + uTime), snoise(core * 6.0 + 19.0));
     float ce = c * c * (3.0 - 2.0 * c);
@@ -170,18 +171,20 @@ void main() {
   float ndl = abs(dot(nv, uLightDir));
   float rim = pow(1.0 - abs(nv.z), 2.0);
   float lit = mix(1.0, 0.4 + 0.75 * ndl + 0.32 * rim, hasN);
-  float energy = clamp(max(mid * uScatter, c * 0.9) + touch * 0.6, 0.0, 1.0);
+  float energy = clamp(max(mid * uScatter, c * 0.8) + touch * 0.6, 0.0, 1.0);
 
   vec3 shaded = col * lit + col * glow * 0.55;
-  shaded = mix(shaded, shaded * 1.5 + col * 0.35 + 0.04, energy * 0.75);
+  // Hot, but saturated: brighten toward the particle's own hue, not white.
+  shaded = mix(shaded, col * 1.35 + col * col * 0.4, energy * 0.7);
   vColor = shaded;
   vEnergy = energy;
 
   float s = uPointSize * size * uObjectScale;
   s *= 1.0 - 0.35 * mid * uScatter;
-  s *= 1.0 - 0.3 * c;
+  s *= 1.0 - 0.4 * c;
   if (uHalo > 0.5) {
-    float keep = step(rnd.w, uHaloFraction * (1.0 + glow) + energy * 0.2);
+    float keep = step(rnd.w, uHaloFraction * (1.0 + glow) + mid * uScatter * 0.12);
+    s *= 1.0 - 0.5 * c;
     s *= uHaloSize * keep;
   }
   // Hide one-sided points that face away from the camera (only at rest,
