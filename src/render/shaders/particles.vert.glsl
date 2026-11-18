@@ -70,8 +70,8 @@ void animatePoint(inout vec3 p, inout vec3 n, float a, float type, float r) {
     float beat = sin(uTime * 1.7);
     if (abs(a) >= 1.0) {
       float w = abs(a) - 1.0;
-      p.y += w * beat * 0.13;
-      p.z += w * w * (0.5 + 0.5 * beat) * 0.1;
+      p.y += w * beat * 0.14;
+      p.x -= w * w * (0.5 + 0.5 * beat) * 0.12;
     } else if (a > 0.0) {
       p.x += sin(uTime * 1.6 - a * 9.0) * 0.07 * a;
       p.z += cos(uTime * 1.3 - a * 7.0) * 0.05 * a;

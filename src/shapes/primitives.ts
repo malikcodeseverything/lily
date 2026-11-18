@@ -11,8 +11,8 @@ export interface TubeOptions {
   radius: (t: number, theta: number) => number;
   count: number;
   color: ColorFn;
-  /** Reference "up" used to orient the cross section. */
-  up?: V3;
+  /** Reference "up" used to orient the cross section (may vary along t). */
+  up?: V3 | ((t: number) => V3);
   size?: number | ((t: number) => number);
   anim?: (t: number, p: V3) => number;
   /** Max radius, used for area-weighted rejection sampling. */
@@ -25,7 +25,7 @@ export interface TubeOptions {
  * not starved and thin parts are not oversampled.
  */
 export function tube(b: CloudBuilder, rng: Rng, o: TubeOptions): void {
-  const up = o.up ?? [0, 0, 1];
+  const upAt = typeof o.up === 'function' ? o.up : () => (o.up as V3 | undefined) ?? ([0, 0, 1] as V3);
   const maxR = o.maxRadius ?? estimateMaxRadius(o);
   let placed = 0;
   let guard = 0;
@@ -43,6 +43,7 @@ export function tube(b: CloudBuilder, rng: Rng, o: TubeOptions): void {
     if (rng.next() > Math.min(1, speed / (0.004 * 2.2) / 1.2 + 0.15)) continue;
 
     const tn = norm(tangent);
+    const up = upAt(t);
     let side = cross(tn, up);
     if (len(side) < 1e-4) side = cross(tn, [1, 0, 0]);
     side = norm(side);
