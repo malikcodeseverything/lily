@@ -4,7 +4,7 @@
 
 **[Live demo](#deploying)** · TypeScript · Three.js · WebGL (GLSL) · MediaPipe
 
-![lily demo: crushing a jellyfish made of particles in a fist, then opening the hand so it bursts into a stargazer lily](docs/demo.webp)
+![lily: sculpt glowing point clouds with your bare hands. A koi made of 140k particles held between two pinching hands, in thermal style.](docs/poster.jpg)
 
 **Sculpt glowing 3D point clouds in mid-air with your hands.** Real-time hand tracking in the browser drives a GPU particle system: pinch to turn an object, pull it bigger with two hands, crush it into a ball of light with your fist, and open your hand to let it bloom into the next one.
 
