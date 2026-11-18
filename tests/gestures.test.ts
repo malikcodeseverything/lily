@@ -66,3 +66,17 @@ describe('GestureStabilizer', () => {
     expect(s.update('pinch')).toBe('pinch');
   });
 });
+
+describe('classify (extra gestures)', () => {
+  it('recognizes the rock sign and keeps it distinct from pointing', () => {
+    expect(label({ index: 'ext', middle: 'curl', ring: 'curl', pinky: 'ext', thumb: 'side' })).toBe('rock');
+    expect(label({ index: 'ext', middle: 'curl', ring: 'curl', pinky: 'curl', thumb: 'tucked' })).toBe('point');
+  });
+
+  it('only reports thumbs down when the model says so and the fingers are folded', () => {
+    const fist = { index: 'curl', middle: 'curl', ring: 'curl', pinky: 'curl', thumb: 'side' } as const;
+    expect(label(fist, 'none', { name: 'Thumb_Down', score: 0.9 })).toBe('thumbsDown');
+    const open = { index: 'ext', middle: 'ext', ring: 'ext', pinky: 'ext', thumb: 'side' } as const;
+    expect(label(open, 'none', { name: 'Thumb_Down', score: 0.9 })).not.toBe('thumbsDown');
+  });
+});

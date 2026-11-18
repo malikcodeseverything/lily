@@ -3,7 +3,7 @@
  * the model's own canned gesture scores. Geometry handles pinch (which the
  * model has no class for) and acts as a tie breaker everywhere else.
  */
-export type GestureName = 'none' | 'open' | 'fist' | 'pinch' | 'point' | 'victory' | 'thumbsUp';
+export type GestureName = 'none' | 'open' | 'fist' | 'pinch' | 'point' | 'victory' | 'thumbsUp' | 'thumbsDown' | 'rock';
 
 export interface Point3 {
   x: number;
@@ -70,14 +70,21 @@ export function classify(f: HandFeatures, model: ModelGesture | null, prev: Gest
   const extendedCount = extended.filter(Boolean).length;
   const m = model && model.score >= T.model ? model.name : 'None';
 
-  // Fist first: a closed hand often has the thumb resting near the index
+  // Thumbs up/down are fists with the thumb out, which geometry alone
+  // cannot tell apart from a fist, so a confident model label wins.
+  if (m === 'Thumb_Up' && curledCount >= 3) return 'thumbsUp';
+  if (m === 'Thumb_Down' && curledCount >= 3) return 'thumbsDown';
+
+  // Fist next: a closed hand often has the thumb resting near the index
   // tip, which would otherwise read as a pinch.
   if (curledCount === 4 || (m === 'Closed_Fist' && curledCount >= 3)) return 'fist';
 
   const pinchLimit = prev === 'pinch' ? T.pinchExit : T.pinchEnter;
   if (f.pinch < pinchLimit && f.extension[0] > 1.0) return 'pinch';
 
-  if (m === 'Thumb_Up' && curledCount >= 3) return 'thumbsUp';
+  // Rock sign: index and pinky up, middle and ring folded. Checked before
+  // "point", which only looks at the first three fingers.
+  if ((extended[0] && extended[3] && curled[1] && curled[2]) || m === 'ILoveYou') return 'rock';
   if ((extendedCount === 4 && f.pinch > 0.55) || m === 'Open_Palm') return 'open';
   if ((extended[0] && extended[1] && curled[2] && curled[3]) || m === 'Victory') return 'victory';
   if ((extended[0] && curled[1] && curled[2]) || m === 'Pointing_Up') return 'point';
