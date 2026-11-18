@@ -9,7 +9,7 @@ No install, no server. Everything (camera, hand tracking, rendering) runs locall
 ## Features
 
 - **Hand tracking at camera frame rate** using MediaPipe's gesture recognizer (GPU delegate, CPU fallback), smoothed with One Euro filters and debounced so gestures do not flicker.
-- **Nine procedural sculptures**, each generated in code from scratch: a stargazer lily, a rearing red dragon, a blue morpho butterfly, an F-16 with a flickering afterburner, a branching tree, a bioluminescent jellyfish, Saturn with its ring divisions and orbiting moons, a swimming koi and a spiral galaxy. Each one is 70k to 220k colored, lit points with its own idle animation (flapping, swaying, banking, pulsing, orbiting, swimming).
+- **Eight procedural sculptures**, each generated in code from scratch: a stargazer lily, a rearing red dragon, a blue morpho butterfly, a branching tree, a bioluminescent jellyfish, Saturn with its ring divisions and orbiting moons, a swimming koi and a spiral galaxy. Each one is 70k to 220k colored, lit points with its own idle animation (flapping, swaying, pulsing, orbiting, swimming).
 - **Four render styles** you can switch between live: natural, hologram, thermal and ember.
 - **GPU morphing.** Two shape slots share one geometry. Every transition, dissolve, collapse and fingertip interaction happens in the vertex shader, so the CPU only touches buffers when a new shape loads.
 - **A bounding-box gizmo** that tracks the object, with a viewport-style caption.
@@ -79,7 +79,7 @@ npm run fetch-models
 | Param | Example | Effect |
 | --- | --- | --- |
 | `q` | `?q=high` | Particle density: `low` (70k), `medium` (140k), `high` (220k). Defaults by device. |
-| `shape` | `?shape=dragon` | Starting object: `lily`, `dragon`, `butterfly`, `f16`, `tree`, `jellyfish`, `saturn`, `koi`, `galaxy`. |
+| `shape` | `?shape=dragon` | Starting object: `lily`, `dragon`, `butterfly`, `tree`, `jellyfish`, `saturn`, `koi`, `galaxy`. |
 | `box`, `glow`, `mirror` | `?box=0` | Turn a feature off at startup. |
 | `debug` | `?debug` | FPS, inference time and live gesture features. |
 
