@@ -88,6 +88,10 @@ export class App {
     this.fingers = new FingerField(this.particles.uniforms.uFingers.value as THREE.Vector4[]);
     this.pointer = new PointerController(this.canvas, this.camera, this.transform, this.fingers);
 
+    // Watch the container itself rather than the window: it also catches
+    // layout that settles after startup (late stylesheets, browser chrome),
+    // which would otherwise leave the canvas stretched.
+    new ResizeObserver(() => this.resize()).observe(container);
     window.addEventListener('resize', () => this.resize());
     this.resize();
   }
@@ -125,9 +129,10 @@ export class App {
   }
 
   resize(): void {
-    const w = this.container.clientWidth;
-    const h = this.container.clientHeight;
-    this.renderer.setSize(w, h, false);
+    const w = Math.max(1, this.container.clientWidth);
+    const h = Math.max(1, this.container.clientHeight);
+    // updateStyle: the canvas CSS size always equals the buffer's aspect.
+    this.renderer.setSize(w, h, true);
     this.camera.aspect = w / h;
     // Keep the object comfortably framed on tall phone screens too.
     this.camera.fov = w / h < 0.8 ? 52 : 38;

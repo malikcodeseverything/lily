@@ -254,7 +254,8 @@ let tracked: TrackedHand[] = [];
 const corners: THREE.Vector3[] = [];
 let statusTimer = 0;
 
-const resizeOverlay = () => overlay.resize(window.innerWidth, window.innerHeight, Math.min(window.devicePixelRatio, 2));
+const resizeOverlay = () => overlay.resize(container.clientWidth || window.innerWidth, container.clientHeight || window.innerHeight, Math.min(window.devicePixelRatio, 2));
+new ResizeObserver(resizeOverlay).observe(container);
 window.addEventListener('resize', resizeOverlay);
 resizeOverlay();
 
