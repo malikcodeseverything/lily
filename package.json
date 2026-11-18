@@ -1,0 +1,26 @@
+{
+  "name": "handform",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Shape 3D point-cloud sculptures in mid-air with your hands. Real-time hand tracking in the browser.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "fetch-models": "node scripts/fetch-models.mjs"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@mediapipe/tasks-vision": "^1.2.3",
+    "three": "^0.187.0"
+  },
+  "devDependencies": {
+    "@types/three": "^0.187.0",
+    "typescript": "~5.9",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.0"
+  }
+}
