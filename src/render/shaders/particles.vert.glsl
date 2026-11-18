@@ -156,7 +156,7 @@ void main() {
       vec2 d = world.xy - f.xy;
       float r2 = dot(d, d);
       float fall = exp(-r2 / (uFingerRadius * uFingerRadius));
-      world.xy += d / (sqrt(r2) + 1e-3) * fall * f.w * uFingerRadius * 0.9;
+      world.xy += d / (sqrt(r2) + 1e-3) * fall * f.w * uFingerRadius * 0.75;
       world.z += fall * f.w * 0.2 * (rnd.x - 0.35);
       touch += fall * f.w;
     }

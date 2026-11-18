@@ -63,7 +63,7 @@ export class ParticleCloud {
     this.uniforms = {
       uTime: { value: 0 },
       uMorph: { value: 0 },
-      uScatter: { value: 1 },
+      uScatter: { value: 0.62 },
       uCollapse: { value: 0 },
       uAnimA: { value: 0 },
       uAnimB: { value: 0 },
@@ -75,7 +75,7 @@ export class ParticleCloud {
       uObjectScale: { value: 1 },
       uViewportHeight: { value: 800 },
       uFingers: { value: [new THREE.Vector4(0, 0, 0, 0), new THREE.Vector4(0, 0, 0, 0)] },
-      uFingerRadius: { value: 0.35 },
+      uFingerRadius: { value: 0.3 },
       uLightDir: { value: new THREE.Vector3(0.35, 0.65, 0.68).normalize() },
       uHalo: { value: 0 },
       uHaloSize: { value: 4.5 },

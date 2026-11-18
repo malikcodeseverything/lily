@@ -168,12 +168,15 @@ const leaveIntro = () => {
 
 const names = () => app.library.entries.map((e) => e.name);
 app.library.onChange(() => hud.setShapes(names(), app.director.index));
-app.director.onChange((i) => hud.setActive(i));
+let firstShape = true;
+app.director.onChange((i) => {
+  hud.setActive(i);
+  if (!firstShape && !hud.startVisible) hud.toast(app.library.entries[i]?.name ?? '');
+  firstShape = false;
+});
 hud.setShapes(names(), 0);
 
 hands.on((e) => {
-  const name = app.library.entries[app.director.index]?.name ?? '';
-  if (e === 'next' || e === 'prev') hud.toast(name);
   if (e === 'reset') hud.toast('Reset');
 });
 
