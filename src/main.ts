@@ -72,9 +72,11 @@ function apply<K extends keyof HudSettings>(key: K, value: HudSettings[K]): void
 async function startCamera(): Promise<void> {
   hud.setStartBusy(true, 'Starting camera…');
   hud.setStatus('loading', 'Camera');
+  let phase = 'camera' as 'camera' | 'model';
   try {
     await tracker.start((s) => {
       if (s === 'model') {
+        phase = 'model';
         hud.setStartBusy(true, 'Loading hand model…');
         hud.setStatus('loading', 'Loading model');
       }
@@ -90,8 +92,9 @@ async function startCamera(): Promise<void> {
     hud.setStartBusy(false);
     hud.setStatus('mouse', 'Mouse');
     hud.setCameraOn(false);
-    const msg = err instanceof Error && err.name === 'NotAllowedError' ? 'Camera permission was blocked' : 'Could not start the camera';
-    hud.toast(`${msg}. Using mouse controls.`, 3200);
+    const denied = err instanceof Error && err.name === 'NotAllowedError';
+    const msg = phase === 'model' ? 'Could not load the hand model (check your connection)' : denied ? 'Camera permission was blocked' : 'Could not start the camera';
+    hud.toast(`${msg}. Using mouse controls.`, 4000);
     hud.hideStart();
     leaveIntro();
   }
