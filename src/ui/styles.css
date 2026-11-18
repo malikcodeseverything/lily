@@ -40,7 +40,14 @@ html, body {
 }
 button { font: inherit; color: inherit; }
 #app { position: fixed; inset: 0; }
-.stage { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+.stage { position: absolute; inset: 0; display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+.camera-layer { position: absolute; inset: 0; overflow: hidden; background: var(--n-0); }
+.camera-layer .camera { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.camera-layer::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity 400ms;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.38) 100%);
+}
+.camera-layer.on::after { opacity: 1; }
 .stage:active { cursor: grabbing; }
 .overlay { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 

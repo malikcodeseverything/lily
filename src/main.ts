@@ -20,7 +20,8 @@ const overlay = new Overlay(document.body);
 const tracker = new HandTracker();
 const slots = new HandSlots();
 const hands = new HandController(app.camera, app.transform, app.director, app.fingers, () => tracker.aspect);
-const recorder = new Recorder(app.canvas);
+const recorder = new Recorder(app.canvas, app.background);
+app.afterRender.push(() => recorder.capture());
 
 // ---- Persisted settings ---------------------------------------------------
 const STORE = 'lily.settings.v1';
@@ -57,7 +58,7 @@ function apply<K extends keyof HudSettings>(key: K, value: HudSettings[K]): void
     case 'skeleton': overlay.showSkeleton = value as boolean; break;
     case 'mirror': app.background.setMirror(value as boolean); break;
     case 'autoRotate': app.transform.autoRotate = value as boolean; break;
-    case 'dim': app.background.uniforms.uDim.value = value; break;
+    case 'dim': app.background.setDim(value as number); break;
     case 'quality': {
       const url = new URL(location.href);
       url.searchParams.set('q', value as string);
@@ -294,4 +295,4 @@ app.hooks.push((dt, time) => {
 });
 
 void app.start();
-if (options.debug) Object.assign(window as object, { app, hands, tracker, hud });
+if (options.debug) Object.assign(window as object, { app, hands, tracker, hud, recorder });

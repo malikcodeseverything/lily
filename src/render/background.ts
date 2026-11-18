@@ -8,12 +8,8 @@ void main() {
 }
 `;
 
+// Ambient backdrop used when the camera is off.
 const frag = /* glsl */ `
-uniform sampler2D uVideo;
-uniform float uHasVideo;
-uniform vec4 uCover;   // uv scale (xy) and offset (zw)
-uniform float uMirror;
-uniform float uDim;
 uniform float uTime;
 uniform vec2 uResolution;
 varying vec2 vUv;
@@ -22,23 +18,10 @@ float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.545
 
 void main() {
   vec2 uv = vUv;
-  vec3 col;
-  if (uHasVideo > 0.5) {
-    vec2 s = uv;
-    if (uMirror > 0.5) s.x = 1.0 - s.x;
-    s = s * uCover.xy + uCover.zw;
-    col = texture2D(uVideo, s).rgb;
-    // Gentle grade: slightly lower saturation and exposure so the
-    // particles carry the frame.
-    float l = dot(col, vec3(0.299, 0.587, 0.114));
-    col = mix(vec3(l), col, 0.85) * uDim;
-  } else {
-    vec2 p = (uv - 0.5) * vec2(uResolution.x / uResolution.y, 1.0);
-    float r = length(p);
-    col = mix(vec3(0.045, 0.05, 0.07), vec3(0.008, 0.008, 0.012), smoothstep(0.0, 0.9, r));
-    col += 0.012 * vec3(0.3, 0.5, 1.0) * (1.0 - smoothstep(0.0, 0.6, r));
-  }
-  // Vignette and fine grain.
+  vec2 p = (uv - 0.5) * vec2(uResolution.x / uResolution.y, 1.0);
+  float r = length(p);
+  vec3 col = mix(vec3(0.045, 0.05, 0.07), vec3(0.008, 0.008, 0.012), smoothstep(0.0, 0.9, r));
+  col += 0.012 * vec3(0.3, 0.5, 1.0) * (1.0 - smoothstep(0.0, 0.6, r));
   vec2 q = uv - 0.5;
   col *= 1.0 - 0.35 * dot(q, q) * 2.0;
   col += (hash(uv * uResolution + fract(uTime) * 100.0) - 0.5) * 0.018;
@@ -47,24 +30,26 @@ void main() {
 `;
 
 /**
- * Fullscreen webcam (or ambient gradient) drawn behind the particles.
- * Rendering the video inside WebGL keeps everything in one canvas, which
- * makes recording a single captureStream() call.
+ * What sits behind the particles.
+ *
+ * The webcam is a real <video> element under a transparent WebGL canvas,
+ * scaled with CSS object-fit: cover. Letting the browser draw the video
+ * keeps its aspect ratio correct everywhere (uploading camera frames as a
+ * WebGL texture can come out stretched in some browsers, notably Safari),
+ * and it is cheaper than a per-frame texture upload. With no camera, an
+ * ambient gradient is drawn in WebGL instead.
  */
 export class Background {
   readonly scene = new THREE.Scene();
   readonly camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
   readonly uniforms: Record<string, THREE.IUniform>;
-  private texture: THREE.VideoTexture | null = null;
+  readonly layer: HTMLElement;
   private video: HTMLVideoElement | null = null;
+  private mirror = true;
+  private dim = 0.88;
 
-  constructor() {
+  constructor(container: HTMLElement) {
     this.uniforms = {
-      uVideo: { value: null },
-      uHasVideo: { value: 0 },
-      uCover: { value: new THREE.Vector4(1, 1, 0, 0) },
-      uMirror: { value: 1 },
-      uDim: { value: 0.88 },
       uTime: { value: 0 },
       uResolution: { value: new THREE.Vector2(1, 1) },
     };
@@ -74,43 +59,67 @@ export class Background {
     );
     mesh.frustumCulled = false;
     this.scene.add(mesh);
+
+    this.layer = document.createElement('div');
+    this.layer.className = 'camera-layer';
+    container.prepend(this.layer);
+  }
+
+  /** True when the WebGL gradient should be drawn (no camera). */
+  get ambient(): boolean {
+    return !this.video;
+  }
+
+  getVideo(): HTMLVideoElement | null {
+    return this.video;
   }
 
   setVideo(video: HTMLVideoElement | null): void {
-    this.texture?.dispose();
+    this.video?.remove();
     this.video = video;
     if (video) {
-      this.texture = new THREE.VideoTexture(video);
-      this.texture.minFilter = THREE.LinearFilter;
-      this.texture.magFilter = THREE.LinearFilter;
-      this.texture.generateMipmaps = false;
-      this.uniforms.uVideo.value = this.texture;
-      this.uniforms.uHasVideo.value = 1;
-    } else {
-      this.texture = null;
-      this.uniforms.uVideo.value = null;
-      this.uniforms.uHasVideo.value = 0;
+      video.className = 'camera';
+      this.layer.prepend(video);
+      void video.play().catch(() => undefined);
     }
+    this.layer.classList.toggle('on', !!video);
+    this.applyStyle();
   }
 
   setMirror(on: boolean): void {
-    this.uniforms.uMirror.value = on ? 1 : 0;
+    this.mirror = on;
+    this.applyStyle();
+  }
+
+  setDim(dim: number): void {
+    this.dim = dim;
+    this.applyStyle();
+  }
+
+  getDim(): number {
+    return this.dim;
+  }
+
+  isMirrored(): boolean {
+    return this.mirror;
+  }
+
+  private applyStyle(): void {
+    if (!this.video) return;
+    this.video.style.transform = this.mirror ? 'scaleX(-1)' : 'none';
+    // A light grade so the particles carry the frame.
+    this.video.style.filter = `saturate(0.85) brightness(${this.dim})`;
   }
 
   update(width: number, height: number, time: number): void {
     this.uniforms.uTime.value = time;
     (this.uniforms.uResolution.value as THREE.Vector2).set(width, height);
-    const v = this.video;
-    if (v && v.videoWidth > 0) {
-      const c = coverTransform(v.videoWidth, v.videoHeight, width, height);
-      (this.uniforms.uCover.value as THREE.Vector4).set(c.scaleX, c.scaleY, c.offsetX, c.offsetY);
-    }
   }
 }
 
 /**
- * UV transform that makes a video of size (vw, vh) "object-fit: cover" a
- * viewport of size (w, h). screenUv * scale + offset = videoUv.
+ * UV transform equivalent to CSS object-fit: cover for a video of size
+ * (vw, vh) in a viewport of size (w, h): screenUv * scale + offset = videoUv.
  */
 export function coverTransform(vw: number, vh: number, w: number, h: number) {
   const videoAspect = vw / vh;

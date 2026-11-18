@@ -95,7 +95,7 @@ webcam ──► MediaPipe GestureRecognizer ──► HandSlots ─────
 
 **Shapes.** Generators in `src/shapes/` build surfaces procedurally (recurved petals with Worley-noise freckles, Catmull-Rom tube bodies, scalloped bat-wing membranes, recursive branches with foliage clumps) and then resample to exactly the renderer's point budget. Wings are two-sided: each face is marked one-sided and culled when it faces away, so the butterfly is iridescent blue on top and brown with eyespots underneath, like a real morpho.
 
-**Rendering.** The webcam is drawn as a fullscreen quad inside the same WebGL canvas, with a cover-fit, mirror and gentle grade. Particles render twice: an opaque, depth-tested pass and an additive halo pass over a subset of points for glow. Rendering it all in one canvas is what makes recording a single `captureStream()` call.
+**Rendering.** The webcam is a regular `<video>` element with CSS `object-fit: cover` under a transparent WebGL canvas, so the browser keeps its aspect ratio correct everywhere (camera frames uploaded as WebGL textures can come out stretched in Safari). Particles render twice: an opaque, depth-tested pass and an additive halo pass over a subset of points for glow. The recorder composites the video and the canvas onto an offscreen 2D canvas right after each render and records that.
 
 ## Importing your own objects
 

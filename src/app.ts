@@ -25,7 +25,7 @@ export class App {
   readonly root = new THREE.Group();
   readonly particles: ParticleCloud;
   readonly box = new BoundsBox();
-  readonly background = new Background();
+  readonly background: Background;
   readonly transform = new ObjectTransform();
   readonly library: ShapeLibrary;
   readonly director: MorphDirector;
@@ -35,6 +35,8 @@ export class App {
 
   /** Extra per-frame work (hand tracking, HUD). Runs before rendering. */
   readonly hooks: FrameHook[] = [];
+  /** Runs right after rendering, while the drawing buffer is still valid. */
+  readonly afterRender: (() => void)[] = [];
   /** True while any controller is holding the object this frame. */
   held = false;
   /** Box opacity boost while the object is being manipulated. */
@@ -49,13 +51,16 @@ export class App {
     private readonly container: HTMLElement,
     readonly options: AppOptions,
   ) {
-    this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance', alpha: false });
+    // Transparent canvas: the webcam <video> sits underneath it.
+    this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance', alpha: true });
+    this.renderer.setClearColor(0x000000, 0);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.autoClear = false;
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.canvas = this.renderer.domElement;
     this.canvas.className = 'stage';
     container.appendChild(this.canvas);
+    this.background = new Background(container);
 
     this.camera.position.set(0, 0, 6);
     this.camera.lookAt(0, 0, 0);
@@ -135,8 +140,9 @@ export class App {
     this.background.update(size.x, size.y, this.elapsed);
 
     this.renderer.clear();
-    this.renderer.render(this.background.scene, this.background.camera);
+    if (this.background.ambient) this.renderer.render(this.background.scene, this.background.camera);
     this.renderer.render(this.scene, this.camera);
+    for (const fn of this.afterRender) fn();
   }
 
   private updateBox(dt: number): void {
