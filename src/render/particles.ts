@@ -74,7 +74,7 @@ export class ParticleCloud {
       uPointSize: { value: 0.016 },
       uObjectScale: { value: 1 },
       uViewportHeight: { value: 800 },
-      uFingers: { value: [new THREE.Vector4(), new THREE.Vector4()] },
+      uFingers: { value: [new THREE.Vector4(0, 0, 0, 0), new THREE.Vector4(0, 0, 0, 0)] },
       uFingerRadius: { value: 0.35 },
       uLightDir: { value: new THREE.Vector3(0.35, 0.65, 0.68).normalize() },
       uHalo: { value: 0 },

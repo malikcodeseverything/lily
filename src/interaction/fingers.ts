@@ -7,7 +7,7 @@ import { damp } from '../core/math';
  * in and out instead of popping.
  */
 export class FingerField {
-  readonly targets = [new THREE.Vector4(), new THREE.Vector4()];
+  readonly targets = [new THREE.Vector4(0, 0, 0, 0), new THREE.Vector4(0, 0, 0, 0)];
   constructor(private readonly uniform: THREE.Vector4[]) {}
 
   set(i: number, p: THREE.Vector3, strength: number): void {
