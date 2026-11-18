@@ -51,3 +51,15 @@ describe('built-in shapes', () => {
     });
   }
 });
+
+describe('poseToM3', () => {
+  it('matches the rotation three.js builds for an XYZ Euler pose', async () => {
+    const THREE = await import('three');
+    const { poseToM3 } = await import('../src/shapes/geometry');
+    const [x, y, z] = [0.42, 0.2, 0.32];
+    const m = new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(x, y, z, 'XYZ')).elements;
+    const r = poseToM3(x, y, z);
+    // three.js stores column-major; compare row-major entries.
+    for (let row = 0; row < 3; row++) for (let col = 0; col < 3; col++) expect(r[row * 3 + col]).toBeCloseTo(m[col * 4 + row], 10);
+  });
+});

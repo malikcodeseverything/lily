@@ -143,3 +143,18 @@ export function distToPolygon(x: number, y: number, poly: [number, number][]): n
   }
   return Math.sqrt(best);
 }
+
+/**
+ * Row-major rotation matching three.js Euler order 'XYZ' (R = Rx * Ry * Rz),
+ * i.e. the same matrix the renderer builds for a cloud's pose.
+ */
+export function poseToM3(x: number, y: number, z: number): M3 {
+  const a = Math.cos(x), b = Math.sin(x);
+  const c = Math.cos(y), d = Math.sin(y);
+  const e = Math.cos(z), f = Math.sin(z);
+  return [
+    c * e, -c * f, d,
+    a * f + b * e * d, a * e - b * f * d, -b * c,
+    b * f - a * e * d, b * e + a * f * d, a * c,
+  ];
+}
