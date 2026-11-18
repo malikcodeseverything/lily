@@ -243,7 +243,10 @@ export class Hud {
   setShapes(names: string[], active: number): void {
     this.carousel.innerHTML = '';
     this.chips = names.map((name, i) => {
-      const c = h(`<button class="chip mono" aria-current="${i === active}"><span class="num">${String(i + 1).padStart(2, '0')}</span>${name}<span class="bar"></span></button>`);
+      const c = h(`<button class="chip mono" aria-current="${i === active}"><span class="num">${String(i + 1).padStart(2, '0')}</span><span class="label"></span><span class="bar"></span></button>`);
+      // Imported shapes are named after the dropped file, so the name goes in as
+      // text, never as markup.
+      c.querySelector<HTMLElement>('.label')!.textContent = name;
       c.addEventListener('click', () => this.cb.onSelectShape(i));
       this.carousel.appendChild(c);
       return c;
