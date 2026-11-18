@@ -26,7 +26,7 @@ export interface PointCloud {
   colors: Float32Array;
   /** xyz per point. All zeros means "unlit" (used for imported scans). */
   normals: Float32Array;
-  /** Per point size multiplier. */
+  /** Per point size multiplier. Negative = one-sided (hidden when facing away). */
   sizes: Float32Array;
   /** Per point animation parameter, meaning depends on animType. */
   anim: Float32Array;

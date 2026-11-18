@@ -117,7 +117,11 @@ void main() {
   float hasN = mix(step(0.1, length(nrmA)), step(0.1, length(nrmB)), e);
   vec3 n = mix(nA, nB, e);
   n = n / max(length(n), 1e-4);
-  float size = mix(metaA.x, metaB.x, e);
+  // Negative size marks one-sided points (e.g. the two faces of a wing).
+  float sizeA = metaA.x;
+  float sizeB = metaB.x;
+  float oneSided = e < 0.5 ? step(sizeA, 0.0) : step(sizeB, 0.0);
+  float size = mix(abs(sizeA), abs(sizeB), e);
   float glow = mix(uGlowA, uGlowB, e);
 
   // Dissolve: drift through a noise field and spiral outward mid-flight.
@@ -180,6 +184,10 @@ void main() {
     float keep = step(rnd.w, uHaloFraction * (1.0 + glow) + energy * 0.2);
     s *= uHaloSize * keep;
   }
+  // Hide one-sided points that face away from the camera (only at rest,
+  // mid-morph everything is visible so the cloud does not flicker).
+  vec3 toCam = normalize(-mv.xyz);
+  if (oneSided > 0.5 && dot(nv, toCam) < -0.02 && mid < 0.05 && c < 0.05) s = 0.0;
   float px = s * projectionMatrix[1][1] * uViewportHeight * 0.5 / -mv.z;
-  gl_PointSize = uHalo > 0.5 ? px : max(px, 1.25);
+  gl_PointSize = uHalo > 0.5 || s <= 0.0 ? px : max(px, 1.25);
 }
