@@ -13,7 +13,9 @@ No install, no server. Everything (camera, hand tracking, rendering) runs locall
 - **GPU morphing.** Two shape slots share one geometry. Every transition, dissolve, collapse and fingertip interaction happens in the vertex shader, so the CPU only touches buffers when a new shape loads.
 - **A bounding-box gizmo** that tracks the object, with a viewport-style caption.
 - **Bring your own scans.** Drag in a `.ply` (plain point cloud or 3D Gaussian Splatting output), a `.splat`, or a `.glb` mesh. Splats are decoded (spherical harmonic color, logit opacity, log scale), floaters are cropped, and meshes are surface-sampled with their textures.
-- **One-click recording** of the clean render (webcam plus particles, no UI) to MP4 or WebM, sized for reels.
+- **Two recording modes**, saved as MP4 or WebM:
+  - **Clean**: webcam, particles and the box, no interface. Made for reels.
+  - **Full screen**: everything you see, including the HUD, hand cursors and labels, with no screen-share prompt.
 - **Mouse and touch fallback** for when there is no camera.
 
 ## Gestures
@@ -38,7 +40,7 @@ No install, no server. Everything (camera, hand tracking, rendering) runs locall
 | Hold `F`, release | Collapse, then burst into the next object |
 | `Space`, `→` / `←`, `1`-`9` | Switch objects |
 | `C` | Camera on / off |
-| `R` | Start / stop recording |
+| `R` / `Shift+R` | Start a clean / full-screen recording, press again to stop |
 | `B` `G` `H` `M` | Toggle box, glow, hand skeleton, mirror |
 | `0` | Reset the view |
 
@@ -95,7 +97,7 @@ webcam ──► MediaPipe GestureRecognizer ──► HandSlots ─────
 
 **Shapes.** Generators in `src/shapes/` build surfaces procedurally (recurved petals with Worley-noise freckles, Catmull-Rom tube bodies, scalloped bat-wing membranes, recursive branches with foliage clumps) and then resample to exactly the renderer's point budget. Wings are two-sided: each face is marked one-sided and culled when it faces away, so the butterfly is iridescent blue on top and brown with eyespots underneath, like a real morpho.
 
-**Rendering.** The webcam is a regular `<video>` element with CSS `object-fit: cover` under a transparent WebGL canvas, so the browser keeps its aspect ratio correct everywhere (camera frames uploaded as WebGL textures can come out stretched in Safari). Particles render twice: an opaque, depth-tested pass and an additive halo pass over a subset of points for glow. The recorder composites the video and the canvas onto an offscreen 2D canvas right after each render and records that.
+**Rendering.** The webcam is a regular `<video>` element with CSS `object-fit: cover` under a transparent WebGL canvas, so the browser keeps its aspect ratio correct everywhere (camera frames uploaded as WebGL textures can come out stretched in Safari). Particles render twice: an opaque, depth-tested pass and an additive halo pass over a subset of points for glow. The recorder composites the video and the canvas onto an offscreen 2D canvas right after each render and records that. Full-screen mode also draws the 2D overlay and repaints the HUD with a small DOM-to-canvas painter (`src/recording/domPainter.ts`) that lays text out word by word at the positions the browser computed, so recording the interface needs no screen-share permission and works the same in every browser.
 
 ## Importing your own objects
 

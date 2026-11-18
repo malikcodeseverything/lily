@@ -1,5 +1,12 @@
 import type { Background } from '../render/background';
 import { coverTransform } from '../render/background';
+import { DomPainter } from './domPainter';
+
+/**
+ * clean: camera + particles + gizmo, nothing else (great for reels).
+ * full:  everything on screen, interface included.
+ */
+export type RecordMode = 'clean' | 'full';
 
 const TYPES = [
   'video/mp4;codecs=avc1.640028',
@@ -11,10 +18,11 @@ const TYPES = [
 ];
 
 /**
- * Records the clean render (webcam + particles, no UI) to a video file.
- * The webcam lives in a <video> element under the WebGL canvas, so each
- * frame is composited onto an offscreen 2D canvas right after rendering.
- * Uses MP4 where the browser can encode it, WebM otherwise.
+ * Records the stage to a video file. The webcam lives in a <video> element
+ * under the WebGL canvas, so each frame is composited onto an offscreen 2D
+ * canvas right after rendering. In "full" mode the 2D overlay and the HUD
+ * are painted on top. Uses MP4 where the browser can encode it, WebM
+ * otherwise.
  */
 export class Recorder {
   private recorder: MediaRecorder | null = null;
@@ -22,10 +30,14 @@ export class Recorder {
   private startedAt = 0;
   private readonly composite = document.createElement('canvas');
   private readonly ctx: CanvasRenderingContext2D;
+  private readonly painter = new DomPainter();
+  mode: RecordMode = 'clean';
 
   constructor(
     private readonly gl: HTMLCanvasElement,
     private readonly background: Background,
+    /** Extra layers for full mode: 2D overlay canvas and HUD roots. */
+    private readonly ui: { overlay: HTMLCanvasElement; roots: () => Element[] },
   ) {
     this.ctx = this.composite.getContext('2d')!;
   }
@@ -42,8 +54,9 @@ export class Recorder {
     return this.recording ? (performance.now() - this.startedAt) / 1000 : 0;
   }
 
-  start(): void {
+  start(mode: RecordMode = this.mode): void {
     if (this.recording) return;
+    this.mode = mode;
     this.composite.width = this.gl.width;
     this.composite.height = this.gl.height;
     this.capture(true);
@@ -85,6 +98,10 @@ export class Recorder {
       }
     }
     ctx.drawImage(this.gl, 0, 0, w, h);
+    if (this.mode === 'full') {
+      ctx.drawImage(this.ui.overlay, 0, 0, w, h);
+      this.painter.paint(ctx, this.ui.roots(), w / window.innerWidth);
+    }
   }
 
   /** Stop and download. Resolves with the file name. */
@@ -96,7 +113,7 @@ export class Recorder {
         const type = rec.mimeType || 'video/webm';
         const ext = type.includes('mp4') ? 'mp4' : 'webm';
         const blob = new Blob(this.chunks, { type });
-        const name = `lily-${timestamp()}.${ext}`;
+        const name = `lily-${this.mode}-${timestamp()}.${ext}`;
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
         a.download = name;

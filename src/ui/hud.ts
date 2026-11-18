@@ -15,7 +15,8 @@ export interface HudCallbacks {
   onStartCamera(): void;
   onStartMouse(): void;
   onToggleCamera(): void;
-  onToggleRecord(): void;
+  /** Start in the given mode, or stop if already recording (mode omitted). */
+  onToggleRecord(mode?: 'clean' | 'full'): void;
   onImport(files: FileList): void;
   onSelectShape(index: number): void;
   onSetting<K extends keyof HudSettings>(key: K, value: HudSettings[K]): void;
@@ -37,6 +38,8 @@ export class Hud {
   private status: HTMLElement;
   private statusLabel: HTMLElement;
   private panel: HTMLElement;
+  private recMenu!: HTMLElement;
+  private isRecording = false;
   private guide: HTMLElement;
   private toastEl: HTMLElement;
   private drop: HTMLElement;
@@ -61,7 +64,7 @@ export class Hud {
     const top = h(`<div class="topbar">
       <div class="status glass mono" data-mode="mouse"><span class="dot"></span><span class="label">Mouse</span></div>
       <button class="icon-btn glass" data-act="camera" aria-pressed="false" title="Camera (C)">${ICONS.camera}</button>
-      <button class="icon-btn glass rec" data-act="record" aria-pressed="false" title="Record (R)">${ICONS.record}</button>
+      <button class="icon-btn glass rec" data-act="record" aria-pressed="false" aria-haspopup="menu" title="Record">${ICONS.record}</button>
       <button class="icon-btn glass" data-act="import" title="Import .ply / .splat / .glb">${ICONS.upload}</button>
       <button class="icon-btn glass" data-act="settings" aria-pressed="false" title="Settings">${ICONS.sliders}</button>
     </div>`);
@@ -69,7 +72,11 @@ export class Hud {
     this.status = top.querySelector('.status')!;
     this.statusLabel = top.querySelector('.status .label')!;
     top.querySelector('[data-act="camera"]')!.addEventListener('click', () => cb.onToggleCamera());
-    top.querySelector('[data-act="record"]')!.addEventListener('click', () => cb.onToggleRecord());
+    top.querySelector('[data-act="record"]')!.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (this.isRecording) cb.onToggleRecord();
+      else this.toggleRecMenu();
+    });
     top.querySelector('[data-act="import"]')!.addEventListener('click', () => this.fileInput.click());
     top.querySelector('[data-act="settings"]')!.addEventListener('click', () => this.togglePanel());
 
@@ -79,6 +86,21 @@ export class Hud {
       this.fileInput.value = '';
     });
     this.root.appendChild(this.fileInput);
+
+    this.recMenu = h(`<div class="rec-menu glass" role="menu" hidden>
+      <button role="menuitem" data-mode="clean"><b>Clean</b><span>Camera and particles only. Best for reels.</span><kbd>R</kbd></button>
+      <button role="menuitem" data-mode="full"><b>Full screen</b><span>Everything you see, interface included.</span><kbd>⇧R</kbd></button>
+    </div>`);
+    this.recMenu.querySelectorAll<HTMLButtonElement>('button').forEach((b) =>
+      b.addEventListener('click', () => {
+        this.toggleRecMenu(false);
+        cb.onToggleRecord(b.dataset.mode as 'clean' | 'full');
+      }),
+    );
+    this.root.appendChild(this.recMenu);
+    window.addEventListener('click', (e) => {
+      if (!this.recMenu.hidden && !this.recMenu.contains(e.target as Node)) this.toggleRecMenu(false);
+    });
 
     this.panel = this.buildPanel();
     this.root.appendChild(this.panel);
@@ -185,9 +207,16 @@ export class Hud {
     if (t) t.setAttribute('aria-checked', String(value));
   }
 
+  toggleRecMenu(force?: boolean): void {
+    const open = force ?? this.recMenu.hidden;
+    this.recMenu.hidden = !open;
+    if (open) this.togglePanel(false);
+  }
+
   togglePanel(force?: boolean): void {
     const open = force ?? this.panel.hidden;
     this.panel.hidden = !open;
+    if (open && this.recMenu) this.recMenu.hidden = true;
     this.root.querySelector('[data-act="settings"]')!.setAttribute('aria-pressed', String(open));
   }
 
@@ -228,6 +257,8 @@ export class Hud {
   }
 
   setRecording(on: boolean): void {
+    this.isRecording = on;
+    this.toggleRecMenu(false);
     const b = this.root.querySelector('[data-act="record"]')!;
     b.setAttribute('aria-pressed', String(on));
     b.innerHTML = on ? ICONS.stop : ICONS.record;

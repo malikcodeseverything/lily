@@ -5,7 +5,7 @@ import { readOptions, QUALITY_POINTS } from './config';
 import { HandController } from './interaction/handController';
 import { worldToViewport } from './interaction/projection';
 import { importFile } from './io/importer';
-import { Recorder } from './recording/recorder';
+import { Recorder, type RecordMode } from './recording/recorder';
 import { Overlay } from './render/overlay';
 import { videoToViewport } from './tracking/coords';
 import { HandSlots, type TrackedHand } from './tracking/handSlots';
@@ -20,7 +20,11 @@ const overlay = new Overlay(document.body);
 const tracker = new HandTracker();
 const slots = new HandSlots();
 const hands = new HandController(app.camera, app.transform, app.director, app.fingers, () => tracker.aspect);
-const recorder = new Recorder(app.canvas, app.background);
+const recorder = new Recorder(app.canvas, app.background, {
+  overlay: overlay.canvas,
+  // The HUD layer plus the toast; the welcome screen and drop target are skipped.
+  roots: () => [document.querySelector('.hud')!],
+});
 app.afterRender.push(() => recorder.capture());
 
 // ---- Persisted settings ---------------------------------------------------
@@ -112,7 +116,7 @@ function stopCamera(): void {
 }
 
 // ---- Recording ------------------------------------------------------------
-async function toggleRecord(): Promise<void> {
+async function toggleRecord(mode?: RecordMode): Promise<void> {
   if (!Recorder.supported) {
     hud.toast('Recording is not supported in this browser');
     return;
@@ -122,8 +126,9 @@ async function toggleRecord(): Promise<void> {
     hud.setRecording(false);
     hud.toast(`Saved ${name}`, 2600);
   } else {
-    recorder.start();
+    recorder.start(mode ?? recorder.mode);
     hud.setRecording(true);
+    hud.toast(recorder.mode === 'full' ? 'Recording everything on screen' : 'Recording camera + particles', 1600);
   }
 }
 
@@ -154,7 +159,7 @@ const hud = new Hud(
       hud.setGuideMode('mouse');
     },
     onToggleCamera: () => (tracker.running ? stopCamera() : void startCamera()),
-    onToggleRecord: () => void toggleRecord(),
+    onToggleRecord: (mode) => void toggleRecord(mode),
     onImport: (files) => void importFiles(files),
     onSelectShape: (i) => app.director.show(i),
     onSetting: (k, v) => apply(k, v),
@@ -204,7 +209,7 @@ window.addEventListener('keydown', (e) => {
   else if (k === 'g') apply('glow', !settings.glow);
   else if (k === 'h') apply('skeleton', !settings.skeleton);
   else if (k === 'm') apply('mirror', !settings.mirror);
-  else if (k === 'r') void toggleRecord();
+  else if (k === 'r') void toggleRecord(recorder.recording ? undefined : e.shiftKey ? 'full' : 'clean');
   else if (k === 'c') tracker.running ? stopCamera() : void startCamera();
   else if (k === '0') app.transform.reset();
   else if (k === 'escape') hud.togglePanel(false);
