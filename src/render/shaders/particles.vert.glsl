@@ -213,7 +213,7 @@ void main() {
     vec3 dir = normalize(p + (rnd.yzw - 0.5) * 0.9 + 1e-4);
     vec3 q = p * 1.5 + rnd.yzw * 2.0 + vec3(0.0, uTime * 0.3, 0.0);
     vec3 drift = vec3(snoise(q), snoise(q + 5.2), snoise(q + 9.7));
-    p += (dir * (0.35 + rnd.x * 1.3) + drift * 0.45) * ex;
+    p += (dir * (0.15 + rnd.x * 0.75) + drift * 0.28) * ex;
   }
 
   vec4 world = modelMatrix * vec4(p, 1.0);
@@ -236,16 +236,19 @@ void main() {
   gl_Position = projectionMatrix * mv;
 
   // Two-sided wrapped lighting plus a soft rim, in view space.
-  vec3 nv = normalize(normalMatrix * n);
+  // Unlit points (plumes, stars, scans) have a zero normal; normalizing it
+  // yields NaN on some GPUs, which would turn the point black.
+  bool lighted = hasN > 0.5 && dot(n, n) > 1e-6;
+  vec3 nv = lighted ? normalize(normalMatrix * n) : vec3(0.0, 0.0, 1.0);
   float ndl = abs(dot(nv, uLightDir));
-  float rim = pow(1.0 - abs(nv.z), 2.0);
-  float lit = mix(1.0, 0.4 + 0.75 * ndl + 0.32 * rim, hasN);
+  float rim = lighted ? pow(1.0 - abs(nv.z), 2.0) : 0.0;
+  float lit = lighted ? 0.4 + 0.75 * ndl + 0.32 * rim : 1.0;
   float energy = clamp(max(max(mid * uScatter, c * 0.8), ex * 0.7) + touch * 0.6, 0.0, 1.0);
 
   vec3 shaded = col * lit + col * glow * 0.55;
   // Hot, but saturated: brighten toward the particle's own hue, not white.
   shaded = mix(shaded, col * 1.35 + col * col * 0.4, energy * 0.7);
-  float fres = mix(0.45, rim, hasN);
+  float fres = lighted ? rim : 0.45;
   vec3 sA = styled(uStyleFrom, shaded, col, fres, world.xyz, energy, rnd.x);
   vec3 sB = styled(uStyleTo, shaded, col, fres, world.xyz, energy, rnd.x);
   vColor = mix(sA, sB, uStyleMix);
@@ -262,7 +265,7 @@ void main() {
   // Hide one-sided points that face away from the camera (only at rest,
   // mid-morph everything is visible so the cloud does not flicker).
   vec3 toCam = normalize(-mv.xyz);
-  if (oneSided > 0.5 && dot(nv, toCam) < -0.02 && mid < 0.05 && c < 0.05) s = 0.0;
+  if (lighted && oneSided > 0.5 && dot(nv, toCam) < -0.02 && mid < 0.05 && c < 0.05) s = 0.0;
   float px = s * projectionMatrix[1][1] * uViewportHeight * 0.5 / -mv.z;
   gl_PointSize = uHalo > 0.5 || s <= 0.0 ? px : max(px, 1.25);
 }

@@ -6,6 +6,8 @@ export interface TrackedHand {
   id: number;
   /** Smoothed landmarks in viewport space (x, y in 0..1, origin top-left). */
   points: Point3[];
+  /** Unsmoothed palm center (middle knuckle) in viewport space, for fast motions like swipes. */
+  palmRaw: { x: number; y: number };
   gesture: GestureName;
   features: HandFeatures;
   /** "Left" / "Right" from the subject's point of view. */
@@ -49,9 +51,10 @@ export class HandSlots {
     const used = new Set<Slot>();
     for (const r of raw) {
       const w = r.landmarks[0];
-      // Greedy nearest-wrist matching.
+      // Greedy nearest-wrist matching. With one hand in view and one slot,
+      // it is the same hand even after a fast move.
       let best: Slot | null = null;
-      let bestD = 0.2;
+      let bestD = raw.length === 1 && this.slots.length === 1 ? 0.6 : 0.22;
       for (const s of this.slots) {
         if (used.has(s)) continue;
         const d = Math.hypot(s.wrist[0] - w.x, s.wrist[1] - w.y);
@@ -87,7 +90,8 @@ export class HandSlots {
         const [vx, vy] = toViewport(fx, fy);
         return { x: vx, y: vy, z: fz };
       });
-      best.hand = { id: best.id, points, gesture, features, handedness: r.handedness, age };
+      const [px, py] = toViewport(r.landmarks[9].x, r.landmarks[9].y);
+      best.hand = { id: best.id, points, palmRaw: { x: px, y: py }, gesture, features, handedness: r.handedness, age };
     }
     this.slots = this.slots.filter((s) => used.has(s) || now - s.lastSeen < this.graceMs);
     return this.slots.filter((s) => used.has(s) && s.hand).map((s) => s.hand!);

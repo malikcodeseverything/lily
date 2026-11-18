@@ -61,6 +61,8 @@ export class HandController {
   private fistEndedAt = -Infinity;
   private charging = false;
   private holdTimers = new Map<string, number>();
+  /** Hold gestures fire once, then wait until the pose is released. */
+  private latched = new Set<GestureName>();
   private cooldownUntil = 0;
   private readonly tmp = new THREE.Vector3();
   private swipes = new Map<number, SwipeDetector>();
@@ -194,13 +196,15 @@ export class HandController {
     for (const [g, need, fire] of holds) {
       const h = hands.find((x) => x.gesture === g);
       const key = g;
-      if (h && time >= this.cooldownUntil) {
+      if (!h) this.latched.delete(g);
+      if (h && !this.latched.has(g) && time >= this.cooldownUntil) {
         const start = this.holdTimers.get(key) ?? time;
         this.holdTimers.set(key, start);
         const act = activity.get(h.id)!;
         act.progress = Math.min(1, (time - start) / need);
         if (time - start >= need) {
           fire();
+          this.latched.add(g);
           this.cooldownUntil = time + TIMING.cooldown;
           this.holdTimers.delete(key);
         }
@@ -237,7 +241,7 @@ export class HandController {
       if (!det) this.swipes.set(h.id, (det = new SwipeDetector()));
       if (time < this.cooldownUntil) det.quiet(this.cooldownUntil);
       const armed = h.gesture === 'open' && open.length === 1 && !this.charging;
-      const dir = det.update(time, palm(h).x, palm(h).y, armed);
+      const dir = det.update(time, h.palmRaw.x, h.palmRaw.y, armed);
       if (dir !== 0) {
         // Swipe left = next, like flicking through a carousel.
         if (dir < 0) {
@@ -281,6 +285,7 @@ export class HandController {
     this.held = false;
     this.activity = [];
     this.swipes.clear();
+    this.latched.clear();
     this.stretch = null;
     this.stretchAmount = 0;
     this.fingers.release(0);
