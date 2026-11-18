@@ -49,7 +49,15 @@ npm install
 npm run dev
 ```
 
-Open the printed `localhost` URL and click **Enable camera**. Browsers only allow camera access on `localhost` or HTTPS, so to try it from a phone on your network, deploy it (see below) or tunnel it over HTTPS.
+Open the printed **Local** URL (`http://localhost:5173`) and click **Enable camera**. Browsers only allow the camera on `localhost` or HTTPS, so the **Network** address (`http://192.168...`) will not work over plain HTTP.
+
+To try it on a phone on the same Wi-Fi, run the HTTPS dev server and open its Network address (accept the self-signed certificate warning once):
+
+```bash
+npm run dev:https
+```
+
+If the camera still fails, the welcome screen shows the exact reason (permission, camera in use by another app, no device) and how to fix it.
 
 The hand model (a few MB) is fetched from Google's MediaPipe CDN on first use. To run fully offline, download it once:
 
@@ -117,6 +125,7 @@ scripts/                 copies the MediaPipe wasm into public/, optional model 
 | Command | What it does |
 | --- | --- |
 | `npm run dev` | Dev server with hot reload |
+| `npm run dev:https` | Same, over HTTPS so phones can use their camera |
 | `npm run build` | Type-check and build to `dist/` |
 | `npm run preview` | Serve the production build |
 | `npm test` | Run the unit tests |
