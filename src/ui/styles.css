@@ -138,6 +138,8 @@ button { font: inherit; color: inherit; }
 .seg { display: flex; background: var(--n-2); border-radius: var(--r-pill); padding: 2px; }
 .seg button { border: 0; background: transparent; color: var(--n-5); padding: 4px 10px; border-radius: var(--r-pill); cursor: pointer; font-family: var(--mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; }
 .seg button[aria-pressed='true'] { background: var(--n-7); color: var(--n-0); }
+.seg.wide { width: 100%; justify-content: space-between; }
+.seg.wide button { flex: 1; padding: 5px 4px; }
 input[type='range'] { accent-color: var(--accent); width: 110px; }
 
 .rec-menu {

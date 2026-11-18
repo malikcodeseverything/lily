@@ -1,7 +1,7 @@
 import './ui/styles.css';
 import * as THREE from 'three';
 import { App } from './app';
-import { readOptions, QUALITY_POINTS } from './config';
+import { readOptions, QUALITY_POINTS, STYLES } from './config';
 import { HandController } from './interaction/handController';
 import { worldToViewport } from './interaction/projection';
 import { importFile } from './io/importer';
@@ -163,6 +163,10 @@ const hud = new Hud(
     onImport: (files) => void importFiles(files),
     onSelectShape: (i) => app.director.show(i),
     onSetting: (k, v) => apply(k, v),
+    onStyle: (i) => {
+      app.setStyle(i);
+      hud.setStyle(i);
+    },
   },
   settings,
   options.debug,
@@ -185,8 +189,22 @@ app.director.onChange((i) => {
 });
 hud.setShapes(names(), 0);
 
+function cycleStyle(): void {
+  const next = (app.style + 1) % STYLES.length;
+  app.setStyle(next);
+  hud.setStyle(next);
+  hud.toast(`Style · ${STYLES[next]}`);
+}
+
+function togglePause(): void {
+  app.setFrozen(!app.frozen);
+  hud.toast(app.frozen ? 'Paused' : 'Resumed');
+}
+
 hands.on((e) => {
   if (e === 'reset') hud.toast('Reset');
+  if (e === 'style') cycleStyle();
+  if (e === 'pause') togglePause();
 });
 
 // Apply persisted settings.
@@ -194,6 +212,7 @@ for (const key of ['glow', 'box', 'skeleton', 'mirror', 'autoRotate', 'dim'] as 
 
 // ---- Keyboard -------------------------------------------------------------
 let fHeld = false;
+let keyStretch = false;
 window.addEventListener('keydown', (e) => {
   if (e.target instanceof HTMLInputElement) return;
   if (e.metaKey || e.ctrlKey || e.altKey) return;
@@ -212,6 +231,9 @@ window.addEventListener('keydown', (e) => {
   else if (k === 'r') void toggleRecord(recorder.recording ? undefined : e.shiftKey ? 'full' : 'clean');
   else if (k === 'c') tracker.running ? stopCamera() : void startCamera();
   else if (k === '0') app.transform.reset();
+  else if (k === 's') cycleStyle();
+  else if (k === 'p') togglePause();
+  else if (k === 'x') keyStretch = true;
   else if (k === 'escape') hud.togglePanel(false);
   else if (k === 'f' && !fHeld) {
     fHeld = true;
@@ -219,6 +241,7 @@ window.addEventListener('keydown', (e) => {
   }
 });
 window.addEventListener('keyup', (e) => {
+  if (e.key.toLowerCase() === 'x') keyStretch = false;
   if (e.key.toLowerCase() === 'f' && fHeld) {
     fHeld = false;
     app.director.collapseTarget = 0;
@@ -248,6 +271,7 @@ app.hooks.push((dt, time) => {
     hands.update(tracked, time, dt);
     app.held = app.held || hands.held;
     app.pointer.hoverTouch = tracked.length === 0;
+    app.explodeTarget = Math.max(hands.stretchAmount, keyStretch ? 0.7 : 0);
   } else if (tracker.running) {
     const raw = tracker.detect(now);
     const v = tracker.video;
@@ -257,9 +281,11 @@ app.hooks.push((dt, time) => {
     hands.update(tracked, time, dt);
     app.held = app.held || hands.held;
     app.pointer.hoverTouch = tracked.length === 0;
+    app.explodeTarget = Math.max(hands.stretchAmount, keyStretch ? 0.7 : 0);
   } else {
     tracked = [];
     app.pointer.hoverTouch = true;
+    app.explodeTarget = keyStretch ? 0.7 : 0;
   }
 
   // Box caption follows the gizmo's top-left corner on screen.

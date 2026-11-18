@@ -1,18 +1,21 @@
 import * as THREE from 'three';
 import type { TrackedHand } from '../tracking/handSlots';
 import type { GestureName } from '../tracking/gestures';
+import { SwipeDetector } from '../tracking/swipe';
 import type { FingerField } from './fingers';
 import type { MorphDirector } from './morphDirector';
 import type { ObjectTransform } from './objectTransform';
 import { viewportToPlane } from './projection';
 
-export type HandEvent = 'next' | 'prev' | 'reset' | 'grab' | 'release' | 'charge' | 'cancel';
+export type HandEvent =
+  | 'next' | 'prev' | 'reset' | 'grab' | 'release' | 'charge' | 'cancel'
+  | 'swipeNext' | 'swipePrev' | 'style' | 'pause' | 'stretch';
 
 /** What each tracked hand is doing this frame, for the overlay. */
 export interface HandActivity {
   id: number;
   gesture: GestureName;
-  role: 'rotate' | 'move' | 'charge' | 'touch' | 'idle';
+  role: 'rotate' | 'move' | 'charge' | 'touch' | 'stretch' | 'idle';
   /** 0..1 progress for timed gestures (charge, hold-to-trigger). */
   progress: number;
 }
@@ -24,7 +27,11 @@ const TIMING = {
   releaseWindow: 0.7,
   victoryHold: 0.45,
   thumbsHold: 0.8,
+  rockHold: 0.4,
+  thumbsDownHold: 0.6,
   cooldown: 1.0,
+  /** Both palms must be open this long before stretching starts. */
+  stretchArm: 0.2,
 };
 
 /**
@@ -36,6 +43,10 @@ const TIMING = {
  *  - victory (peace sign)            → previous object
  *  - point                           → fingertip pushes particles
  *  - thumbs up                       → reset position / scale
+ *  - open palm, quick sideways flick  → next / previous object
+ *  - both palms open, pulled apart    → stretch the object apart
+ *  - rock sign (hold)                 → cycle render style
+ *  - thumbs down (hold)               → pause / resume the animation
  */
 export class HandController {
   activity: HandActivity[] = [];
@@ -52,6 +63,10 @@ export class HandController {
   private holdTimers = new Map<string, number>();
   private cooldownUntil = 0;
   private readonly tmp = new THREE.Vector3();
+  private swipes = new Map<number, SwipeDetector>();
+  private stretch: { since: number; d0: number } | null = null;
+  /** 0..1 how far the two open palms are pulling the object apart. */
+  stretchAmount = 0;
 
   constructor(
     private readonly camera: THREE.PerspectiveCamera,
@@ -173,6 +188,8 @@ export class HandController {
     const holds: [GestureName, number, () => void][] = [
       ['victory', TIMING.victoryHold, () => { this.director.prev(); this.emit('prev'); }],
       ['thumbsUp', TIMING.thumbsHold, () => { this.transform.reset(); this.emit('reset'); }],
+      ['rock', TIMING.rockHold, () => this.emit('style')],
+      ['thumbsDown', TIMING.thumbsDownHold, () => this.emit('pause')],
     ];
     for (const [g, need, fire] of holds) {
       const h = hands.find((x) => x.gesture === g);
@@ -191,6 +208,49 @@ export class HandController {
         this.holdTimers.delete(key);
       }
     }
+
+    // --- Two open palms: pull apart to stretch the object.
+    const open = hands.filter((h) => h.gesture === 'open');
+    const palm = (h: TrackedHand) => h.points[9];
+    if (open.length === 2) {
+      const a = palm(open[0]);
+      const b = palm(open[1]);
+      const d = Math.hypot((a.x - b.x) * aspect, a.y - b.y);
+      if (!this.stretch) this.stretch = { since: time, d0: d };
+      if (time - this.stretch.since > TIMING.stretchArm) {
+        if (this.stretchAmount === 0) this.emit('stretch');
+        // Pulling apart from where you started opens it up; closing your
+        // hands back together reforms it.
+        this.stretchAmount = Math.min(1, Math.max(0, (d - this.stretch.d0) / 0.45));
+        for (const h of open) activity.get(h.id)!.role = 'stretch';
+      }
+    } else {
+      this.stretch = null;
+      this.stretchAmount = 0;
+    }
+
+    // --- Swipe: one open hand flicked sideways.
+    const seen = new Set<number>();
+    for (const h of hands) {
+      seen.add(h.id);
+      let det = this.swipes.get(h.id);
+      if (!det) this.swipes.set(h.id, (det = new SwipeDetector()));
+      if (time < this.cooldownUntil) det.quiet(this.cooldownUntil);
+      const armed = h.gesture === 'open' && open.length === 1 && !this.charging;
+      const dir = det.update(time, palm(h).x, palm(h).y, armed);
+      if (dir !== 0) {
+        // Swipe left = next, like flicking through a carousel.
+        if (dir < 0) {
+          this.director.next();
+          this.emit('swipeNext');
+        } else {
+          this.director.prev();
+          this.emit('swipePrev');
+        }
+        this.cooldownUntil = time + 0.6;
+      }
+    }
+    for (const id of [...this.swipes.keys()]) if (!seen.has(id)) this.swipes.delete(id);
 
     // --- Pointing fingertips disturb the particles.
     let slot = 0;
@@ -220,6 +280,9 @@ export class HandController {
     this.charging = false;
     this.held = false;
     this.activity = [];
+    this.swipes.clear();
+    this.stretch = null;
+    this.stretchAmount = 0;
     this.fingers.release(0);
     this.fingers.release(1);
   }

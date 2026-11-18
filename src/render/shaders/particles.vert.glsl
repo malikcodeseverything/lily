@@ -28,11 +28,40 @@ uniform vec3 uLightDir;
 uniform float uHalo;
 uniform float uHaloSize;
 uniform float uHaloFraction;
+uniform float uExplode;
+uniform float uStyleFrom;
+uniform float uStyleTo;
+uniform float uStyleMix;
 
 varying vec3 vColor;
 varying float vEnergy;
 
 #include <noise>
+
+// Render styles: 0 natural, 1 hologram, 2 thermal, 3 ember.
+vec3 thermal(float h) {
+  vec3 c = mix(vec3(0.02, 0.0, 0.08), vec3(0.38, 0.0, 0.6), smoothstep(0.0, 0.25, h));
+  c = mix(c, vec3(0.92, 0.08, 0.16), smoothstep(0.2, 0.45, h));
+  c = mix(c, vec3(1.0, 0.55, 0.0), smoothstep(0.4, 0.65, h));
+  c = mix(c, vec3(1.0, 0.95, 0.45), smoothstep(0.62, 0.85, h));
+  return mix(c, vec3(1.0), smoothstep(0.85, 1.0, h));
+}
+
+vec3 styled(float style, vec3 shaded, vec3 col, float fres, vec3 world, float energy, float r) {
+  float lum = dot(col, vec3(0.299, 0.587, 0.114));
+  if (style < 0.5) return shaded;
+  if (style < 1.5) {
+    float scan = 0.72 + 0.28 * sin(world.y * 95.0 - uTime * 5.0);
+    float flicker = 0.92 + 0.08 * sin(uTime * 31.0 + r * 50.0);
+    return vec3(0.22, 0.82, 1.0) * (0.22 + lum * 0.95 + fres * 0.9) * scan * flicker;
+  }
+  if (style < 2.5) {
+    float heat = clamp(lum * 0.85 + fres * 0.3 + energy * 0.35 + 0.06 * sin(world.y * 4.0 + uTime), 0.0, 1.0);
+    return thermal(heat);
+  }
+  float flick = 0.78 + 0.22 * sin(uTime * 7.0 + r * 30.0);
+  return vec3(1.0, 0.42, 0.1) * (0.25 + lum * 1.25) * flick + vec3(1.0, 0.82, 0.45) * fres * 0.45;
+}
 
 vec3 rotY(vec3 p, float a) {
   float c = cos(a);
@@ -178,6 +207,15 @@ void main() {
     p = mix(p, core, stag);
   }
 
+  // Two-palm stretch: the object blows apart as the hands separate.
+  float ex = uExplode;
+  if (ex > 1e-4) {
+    vec3 dir = normalize(p + (rnd.yzw - 0.5) * 0.9 + 1e-4);
+    vec3 q = p * 1.5 + rnd.yzw * 2.0 + vec3(0.0, uTime * 0.3, 0.0);
+    vec3 drift = vec3(snoise(q), snoise(q + 5.2), snoise(q + 9.7));
+    p += (dir * (0.35 + rnd.x * 1.3) + drift * 0.45) * ex;
+  }
+
   vec4 world = modelMatrix * vec4(p, 1.0);
 
   // Fingertips push particles away in screen-aligned space.
@@ -202,12 +240,15 @@ void main() {
   float ndl = abs(dot(nv, uLightDir));
   float rim = pow(1.0 - abs(nv.z), 2.0);
   float lit = mix(1.0, 0.4 + 0.75 * ndl + 0.32 * rim, hasN);
-  float energy = clamp(max(mid * uScatter, c * 0.8) + touch * 0.6, 0.0, 1.0);
+  float energy = clamp(max(max(mid * uScatter, c * 0.8), ex * 0.7) + touch * 0.6, 0.0, 1.0);
 
   vec3 shaded = col * lit + col * glow * 0.55;
   // Hot, but saturated: brighten toward the particle's own hue, not white.
   shaded = mix(shaded, col * 1.35 + col * col * 0.4, energy * 0.7);
-  vColor = shaded;
+  float fres = mix(0.45, rim, hasN);
+  vec3 sA = styled(uStyleFrom, shaded, col, fres, world.xyz, energy, rnd.x);
+  vec3 sB = styled(uStyleTo, shaded, col, fres, world.xyz, energy, rnd.x);
+  vColor = mix(sA, sB, uStyleMix);
   vEnergy = energy;
 
   float s = uPointSize * size * uObjectScale;

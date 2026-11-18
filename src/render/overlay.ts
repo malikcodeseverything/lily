@@ -15,6 +15,7 @@ const LABELS: Record<string, string> = {
   move: 'PINCH · MOVE / SCALE',
   charge: 'FIST · CHARGING',
   touch: 'POINT · TOUCH',
+  stretch: 'OPEN PALMS · STRETCH',
 };
 
 /**
@@ -166,6 +167,8 @@ function gestureLabel(g: string): string {
     case 'fist': return 'FIST';
     case 'victory': return 'PEACE · PREVIOUS';
     case 'thumbsUp': return 'THUMBS UP · RESET';
+    case 'thumbsDown': return 'THUMBS DOWN · PAUSE';
+    case 'rock': return 'ROCK · STYLE';
     case 'point': return 'POINT';
     default: return '';
   }

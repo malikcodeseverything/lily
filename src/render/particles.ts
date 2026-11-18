@@ -82,6 +82,10 @@ export class ParticleCloud {
       uHaloFraction: { value: 0.12 },
       uHaloStrength: { value: 0.22 },
       uOpacity: { value: 1 },
+      uExplode: { value: 0 },
+      uStyleFrom: { value: 0 },
+      uStyleTo: { value: 0 },
+      uStyleMix: { value: 1 },
     };
 
     const vertexShader = vert.replace('#include <noise>', noise);

@@ -1,5 +1,5 @@
 import { ICONS } from './icons';
-import type { Quality } from '../config';
+import { STYLES, type Quality } from '../config';
 
 export interface HudSettings {
   glow: boolean;
@@ -20,6 +20,7 @@ export interface HudCallbacks {
   onImport(files: FileList): void;
   onSelectShape(index: number): void;
   onSetting<K extends keyof HudSettings>(key: K, value: HudSettings[K]): void;
+  onStyle(index: number): void;
 }
 
 export type StatusMode = 'mouse' | 'loading' | 'hands' | 'recording';
@@ -114,11 +115,17 @@ export class Hud {
         <li data-for="hands"><b>Point</b><span>Brush the particles aside</span></li>
         <li data-for="hands"><b>Peace sign</b><span>Previous object</span></li>
         <li data-for="hands"><b>Thumbs up</b><span>Reset position and size</span></li>
+        <li data-for="hands"><b>Swipe</b><span>Flick an open hand sideways to change object</span></li>
+        <li data-for="hands"><b>Two palms</b><span>Pull your open hands apart to stretch it</span></li>
+        <li data-for="hands"><b>Rock sign</b><span>Change render style</span></li>
+        <li data-for="hands"><b>Thumbs down</b><span>Pause or resume the motion</span></li>
         <li data-for="mouse"><b>Drag</b><span>Turn the object (release to throw)</span></li>
         <li data-for="mouse"><b>Shift / right drag</b><span>Move it</span></li>
         <li data-for="mouse"><b>Scroll</b><span>Scale</span></li>
         <li data-for="mouse"><b>Hold F</b><span>Collapse, release to burst into the next</span></li>
         <li data-for="mouse"><b>← →  1-9</b><span>Switch objects</span></li>
+        <li data-for="mouse"><b>Hold X</b><span>Stretch the object apart</span></li>
+        <li data-for="mouse"><b>S · P</b><span>Render style · pause motion</span></li>
       </ul>
     </section>`);
     this.guide.querySelector('header')!.addEventListener('click', () => {
@@ -172,6 +179,10 @@ export class Hud {
       ${this.toggleRow('mirror', 'Mirror camera', 'M', s.mirror)}
       ${this.toggleRow('autoRotate', 'Idle spin', '', s.autoRotate)}
       <div class="row"><label for="dim">Camera brightness</label><input id="dim" type="range" min="0.2" max="1.2" step="0.01" value="${s.dim}" /></div>
+      <h3 class="mono">Style</h3>
+      <div class="row"><div class="seg wide" data-key="style">
+        ${STYLES.map((name, i) => `<button data-style="${i}" aria-pressed="${i === 0}">${name}</button>`).join('')}
+      </div></div>
       <h3 class="mono">Particles</h3>
       <div class="row"><label>Density</label><div class="seg" data-key="quality">
         ${(['low', 'medium', 'high'] as Quality[]).map((q) => `<button data-q="${q}" aria-pressed="${q === s.quality}">${q}</button>`).join('')}
@@ -189,8 +200,11 @@ export class Hud {
       const v = parseFloat((e.target as HTMLInputElement).value);
       this.cb.onSetting('dim', v);
     });
-    p.querySelectorAll<HTMLButtonElement>('.seg button').forEach((b) =>
+    p.querySelectorAll<HTMLButtonElement>('.seg[data-key="quality"] button').forEach((b) =>
       b.addEventListener('click', () => this.cb.onSetting('quality', b.dataset.q as Quality)),
+    );
+    p.querySelectorAll<HTMLButtonElement>('.seg[data-key="style"] button').forEach((b) =>
+      b.addEventListener('click', () => this.cb.onStyle(parseInt(b.dataset.style!, 10))),
     );
     return p;
   }
@@ -211,6 +225,12 @@ export class Hud {
     const open = force ?? this.recMenu.hidden;
     this.recMenu.hidden = !open;
     if (open) this.togglePanel(false);
+  }
+
+  setStyle(index: number): void {
+    this.panel.querySelectorAll<HTMLButtonElement>('.seg[data-key="style"] button').forEach((b) =>
+      b.setAttribute('aria-pressed', String(b.dataset.style === String(index))),
+    );
   }
 
   togglePanel(force?: boolean): void {

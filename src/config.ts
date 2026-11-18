@@ -31,3 +31,6 @@ export function readOptions(search = location.search): AppOptions {
     debug: p.has('debug'),
   };
 }
+
+/** Render styles cycled with the rock sign or the S key. */
+export const STYLES = ['Natural', 'Hologram', 'Thermal', 'Ember'] as const;

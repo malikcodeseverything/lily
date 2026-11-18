@@ -44,6 +44,14 @@ export class App {
   private boxOpacity = 1;
   private last = performance.now();
   private elapsed = 0;
+  /** Animation clock; stops while paused. */
+  private animTime = 0;
+  /** When true the sculpture's own motion pauses (gestures still work). */
+  frozen = false;
+  /** Two-palm stretch amount the controller asks for, 0..1. */
+  explodeTarget = 0;
+  /** Render style index (see STYLES). */
+  style = 0;
   private frameTimes: number[] = [];
   fps = 60;
 
@@ -99,6 +107,19 @@ export class App {
     return this.boxOpacity > 0;
   }
 
+  setStyle(index: number): void {
+    const u = this.particles.uniforms;
+    // Crossfade from whatever is on screen now to the new style.
+    u.uStyleFrom.value = u.uStyleMix.value > 0.5 ? u.uStyleTo.value : u.uStyleFrom.value;
+    u.uStyleTo.value = index;
+    u.uStyleMix.value = 0;
+    this.style = index;
+  }
+
+  setFrozen(on: boolean): void {
+    this.frozen = on;
+  }
+
   setGlow(on: boolean): void {
     this.particles.setHaloEnabled(on);
   }
@@ -126,13 +147,19 @@ export class App {
     for (const hook of this.hooks) hook(dt, this.elapsed);
     this.pointer.update();
 
+    if (!this.frozen) this.animTime += dt;
+    const idleSpin = this.transform.autoRotate;
+    if (this.frozen) this.transform.autoRotate = false;
     this.transform.update(dt, this.held);
+    this.transform.autoRotate = idleSpin;
     this.transform.applyTo(this.root);
     this.director.update(dt);
     this.fingers.update(dt);
 
     const u = this.particles.uniforms;
-    u.uTime.value = this.elapsed;
+    u.uTime.value = this.animTime;
+    u.uStyleMix.value = Math.min(1, u.uStyleMix.value + dt / 0.6);
+    u.uExplode.value += (this.explodeTarget - u.uExplode.value) * (1 - Math.exp(-(this.explodeTarget > u.uExplode.value ? 9 : 4) * dt));
     u.uObjectScale.value = this.transform.scale;
     this.updateBox(dt);
 
