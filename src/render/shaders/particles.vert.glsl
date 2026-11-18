@@ -77,7 +77,7 @@ void animatePoint(inout vec3 p, inout vec3 n, float a, float type, float r) {
       p.z += cos(uTime * 1.3 - a * 7.0) * 0.05 * a;
     }
     p.y += 0.015 * sin(uTime * 1.7 + 1.2);
-  } else {
+  } else if (type < 4.5) {
     // Pulse: jellyfish bell contracts, tentacles trail.
     float pulse = 0.5 + 0.5 * sin(uTime * 1.8);
     p.y += 0.06 * sin(uTime * 1.8 - 0.8);
@@ -89,6 +89,37 @@ void animatePoint(inout vec3 p, inout vec3 n, float a, float type, float r) {
       p.x += sin(uTime * 1.4 - t * 7.0 + r * 6.28) * 0.08 * t;
       p.z += cos(uTime * 1.1 - t * 6.0 + r * 6.28) * 0.08 * t;
       p.y += 0.04 * pulse * (1.0 - t);
+    }
+  } else if (type < 5.5) {
+    // Jet: afterburner flicker, then a slow roll and bob for the airframe.
+    if (a >= 1.0) {
+      float d = a - 1.0;
+      float flick = 0.5 + 0.5 * sin(uTime * 37.0 + r * 40.0) * sin(uTime * 23.0 + r * 13.0);
+      p.x -= d * (0.06 + 0.08 * flick);
+      p.yz *= 1.0 + 0.15 * flick * d;
+    }
+    float roll = 0.08 * sin(uTime * 0.7);
+    float c = cos(roll);
+    float s = sin(roll);
+    p.yz = mat2(c, s, -s, c) * p.yz;
+    n.yz = mat2(c, s, -s, c) * n.yz;
+    p.y += 0.025 * sin(uTime * 1.1);
+  } else if (type < 6.5) {
+    // Orbit: Keplerian-ish angular speed, slower farther out.
+    float speed = a > 0.0 ? 0.55 / pow(max(a, 0.15), 1.5) : 0.25;
+    float ang = uTime * min(speed, 2.2) * 0.35;
+    p = rotY(p, ang);
+    n = rotY(n, ang);
+  } else {
+    // Swim: a travelling wave that grows toward the tail, fins flutter.
+    if (a <= 1.0) {
+      float w = pow(a, 1.6);
+      p.z += sin(uTime * 3.2 - a * 5.5) * 0.16 * w;
+      p.x += cos(uTime * 3.2 - a * 5.5) * 0.02 * w;
+    } else {
+      float f = a - 2.0;
+      p.y += sin(uTime * 6.0 + r * 3.0) * 0.03 * f;
+      p.z += sin(uTime * 3.2 - 0.5 * 5.5) * 0.04;
     }
   }
 }
