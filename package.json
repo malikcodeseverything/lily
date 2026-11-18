@@ -5,7 +5,10 @@
   "description": "Sculpt glowing 3D point-cloud objects in mid-air with your hands. Real-time hand tracking in the browser.",
   "type": "module",
   "scripts": {
+    "postinstall": "node scripts/copy-wasm.mjs",
+    "predev": "node scripts/copy-wasm.mjs",
     "dev": "vite",
+    "prebuild": "node scripts/copy-wasm.mjs",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest run",
