@@ -4,13 +4,12 @@
 
 **[Live demo](#deploying)** · TypeScript · Three.js · WebGL (GLSL) · MediaPipe
 
-![lily: a stargazer lily made of glowing particles inside a wireframe gizmo, with the hand-tracking HUD](docs/hero.jpg)
+![lily demo: crushing a jellyfish made of particles in a fist, then opening the hand so it bursts into a stargazer lily](docs/demo.webp)
 
 **Sculpt glowing 3D point clouds in mid-air with your hands.** Real-time hand tracking in the browser drives a GPU particle system: pinch to turn an object, pull it bigger with two hands, crush it into a ball of light with your fist, and open your hand to let it bloom into the next one.
 
 No install, no server. Everything (camera, hand tracking, rendering) runs locally in the browser.
 
-<!-- Demo clip: record one in the app with R (clean mode), then drag the file into this README on GitHub. -->
 
 ## Features
 
