@@ -4,9 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#050506" />
-    <meta name="description" content="Sculpt glowing 3D point-cloud objects in mid-air with your hands." />
+    <meta name="description" content="Lily is a free browser app by Hamza Malik that tracks your hands with your webcam and lets you sculpt glowing 3D point clouds in mid-air. Pinch, stretch, crush and burst particle sculptures. No install." />
+    <link rel="canonical" href="https://lily.hamzayasir.com/" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="author" content="Hamza Malik" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='5' fill='%23ff4f7b'/><rect x='3.5' y='3.5' width='25' height='25' fill='none' stroke='white' stroke-opacity='.6'/></svg>" />
-    <title>Lily · hand-controlled point clouds</title>
+    <title>Lily · Sculpt 3D point clouds with your hands in the browser</title>
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Lily · sculpt glowing point clouds with your hands" />
     <meta property="og:description" content="Real-time hand tracking in the browser drives a GPU particle system. Pinch, stretch, crush and burst 3D sculptures in mid-air." />
@@ -16,9 +19,14 @@
     <meta property="og:image:height" content="630" />
     <meta name="twitter:image" content="https://lily.hamzayasir.com/og.jpg" />
     <meta name="twitter:card" content="summary_large_image" />
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Lily","url":"https://lily.hamzayasir.com/","image":"https://lily.hamzayasir.com/og.jpg","description":"Browser app that tracks both hands with MediaPipe through the webcam and lets you shape GPU particle sculptures of up to 220,000 points with gestures.","applicationCategory":"MultimediaApplication","operatingSystem":"Any (modern web browser with a webcam)","browserRequirements":"Requires WebGL and camera access","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Person","@id":"https://hamzayasir.com/#person","name":"Hamza Malik","url":"https://hamzayasir.com/"}}</script>
   </head>
   <body>
     <div id="app"></div>
+    <noscript>
+      <h1>Lily: sculpt 3D point clouds with your hands</h1>
+      <p>Lily tracks both hands through your webcam and turns gestures into a GPU particle system. Pinch, stretch, crush and burst glowing sculptures in mid-air. It needs JavaScript, WebGL and camera access. Built by <a href="https://hamzayasir.com/">Hamza Malik</a>.</p>
+    </noscript>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

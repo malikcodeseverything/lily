@@ -1,0 +1,13 @@
+# Lily
+
+> Free browser app that tracks both hands through the webcam (MediaPipe) and lets you sculpt glowing 3D point clouds of up to 220,000 particles in mid-air. Built by Hamza Malik.
+
+- App: https://lily.hamzayasir.com/
+- Author: [Hamza Malik](https://hamzayasir.com/)
+
+## How it works
+
+- Hand tracking: MediaPipe hand landmarks run in the browser; nothing is uploaded.
+- Rendering: Three.js and custom WebGL (GLSL) shaders drive a GPU particle system.
+- Gestures: pinch, stretch, crush and burst reshape the sculpture in real time.
+- Requirements: a modern browser with WebGL and a webcam. No install or account.
