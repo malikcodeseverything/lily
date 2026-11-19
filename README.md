@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/malikcodeseverything/lily/actions/workflows/ci.yml/badge.svg)](https://github.com/malikcodeseverything/lily/actions/workflows/ci.yml)
 
-**[Live demo: lily-gray-delta.vercel.app](https://lily-gray-delta.vercel.app)** · TypeScript · Three.js · WebGL (GLSL) · MediaPipe
+**[Live demo: lily.hamzayasir.com](https://lily.hamzayasir.com)** · TypeScript · Three.js · WebGL (GLSL) · MediaPipe
 
 ![lily: sculpt glowing point clouds with your bare hands. A koi made of 140k particles held between two pinching hands, in thermal style.](docs/poster.jpg)
 
